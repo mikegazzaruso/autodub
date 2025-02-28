@@ -90,7 +90,7 @@ python translate_video.py --input "percorso/al/video/originale.mp4" --output "pe
 2. **Trascrizione**: Il modello Whisper trascrive l'audio in testo
 3. **Traduzione**: Il testo viene tradotto nella lingua di destinazione
 4. **Clonazione vocale**: Tortoise-TTS genera un nuovo audio con la voce clonata
-5. **Sincronizzazione**: La velocità dell'audio viene regolata per mantenere il lip sync
+5. **Sincronizzazione**: La velocità dell'audio viene regolata per mantenere il timing (//TODO: Implementazione Lip Sync)
 6. **Combinazione**: L'audio tradotto viene combinato con eventuali suoni di fondo
 7. **Assemblaggio**: Il video originale e l'audio tradotto vengono uniti nel video finale
 
