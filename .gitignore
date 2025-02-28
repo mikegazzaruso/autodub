@@ -60,3 +60,5 @@ conversions/
 voice_samples/
 video_translate_env/
 test.mov
+test_out.mov 
+cache/

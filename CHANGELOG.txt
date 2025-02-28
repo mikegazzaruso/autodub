@@ -1,0 +1,23 @@
+Versione: 0.1.0a
+
+Changelog:
+
+0.1.0a (28 Febbraio 2025)
+
+Rilascio iniziale del tool di traduzione e clonazione vocale per video.
+
+Implementazione di Whisper per il riconoscimento vocale.
+
+Utilizzo di MBart per la traduzione multilingue.
+
+Integrazione di Tortoise-TTS per la sintesi vocale con clonazione della voce.
+
+Sincronizzazione automatica del parlato con i tempi del video.
+
+Gestione avanzata della cache per ottimizzare i tempi di elaborazione.
+
+Separazione vocale AI con Demucs per un doppiaggio più pulito.
+
+Supporto a più lingue per la localizzazione multilingue.
+
+Struttura modulare per facilitare miglioramenti futuri.
