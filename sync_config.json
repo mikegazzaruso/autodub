@@ -1,0 +1,25 @@
+{
+  "max_speed_factor": 1.4,
+  "min_speed_factor": 0.75,
+  "pause_threshold": -32,
+  "min_pause_duration": 120,
+  "sync_tolerance": 150,
+  "adaptive_timing": true,
+  "preserve_sentence_breaks": true,
+  
+  
+  "language_specific": {
+    "it-en": {
+      "length_ratio": 1.05,
+      "speech_rate_ratio": 0.95
+    }
+  },
+  
+  "advanced": {
+    "segment_max_duration": 8000,
+    "segment_split_preference": "sentence",
+    "visualization_enabled": true,
+    "metrics_output_file": "sync_metrics.json",
+    "debug_audio_output": "sync_debug.wav"
+  }
+}

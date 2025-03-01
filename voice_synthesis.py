@@ -3,6 +3,7 @@ import torch
 import librosa
 import numpy as np
 import subprocess
+import math
 from pydub import AudioSegment
 from tortoise.api import TextToSpeech
 import traceback
@@ -117,7 +118,43 @@ def clone_voice(tts, text, voice_samples, conditioning_latents, segment_idx=0):
         print("Creating silent audio as fallback...")
         return np.zeros(int(24000 * 3))  # 3 seconds of silence at 24kHz
 
-def generate_audio_segments(tts, aligned_segments, temp_dir, voice_samples, conditioning_latents):
+def calculate_adaptive_speed_factor(current_duration, target_duration, sync_options):
+    """
+    Calculate an adaptive speed factor based on the difference between current and target duration.
+    
+    Args:
+        current_duration: Current audio duration in seconds
+        target_duration: Target duration in seconds
+        sync_options: Synchronization options dictionary
+        
+    Returns:
+        Adjusted speed factor
+    """
+    # Get limits from sync options
+    max_speed = sync_options.get("max_speed_factor", 1.8)
+    min_speed = sync_options.get("min_speed_factor", 0.7)
+    
+    # Calculate raw speed factor
+    if target_duration <= 0:
+        return 1.0  # Avoid division by zero
+    
+    raw_factor = current_duration / target_duration
+    
+    # Apply logarithmic scaling for more natural adjustment
+    if raw_factor > 1.0:
+        # Acceleration with logarithmic scale to preserve naturalness
+        # log base 2 means that doubling the duration results in a factor of 1.5
+        adjusted_factor = 1.0 + math.log(raw_factor, 2) * 0.5
+        return min(adjusted_factor, max_speed)
+    elif raw_factor < 1.0:
+        # Deceleration with different approach to avoid extreme slowdown
+        # We use a square root function to make the slowdown more gradual
+        adjusted_factor = max(min_speed, math.sqrt(raw_factor))
+        return adjusted_factor
+    else:
+        return 1.0  # No adjustment needed
+
+def generate_audio_segments(tts, aligned_segments, temp_dir, voice_samples, conditioning_latents, sync_options=None):
     """
     Generate audio segments for each translated segment.
     
@@ -127,6 +164,7 @@ def generate_audio_segments(tts, aligned_segments, temp_dir, voice_samples, cond
         temp_dir: Directory to store temporary files
         voice_samples: Voice samples for cloning
         conditioning_latents: Conditioning latents for voice cloning
+        sync_options: Dictionary with synchronization options
         
     Returns:
         List of audio segment information
@@ -134,11 +172,20 @@ def generate_audio_segments(tts, aligned_segments, temp_dir, voice_samples, cond
     print("Generating audio segments...")
     audio_segments = []
     
+    # Default sync options if none provided
+    if sync_options is None:
+        sync_options = {
+            "max_speed_factor": 1.8,
+            "min_speed_factor": 0.7,
+            "adaptive_timing": True
+        }
+    
     for i, segment in enumerate(aligned_segments):
         text = segment["text"]
         start_time = segment["start"]
         end_time = segment["end"]
         duration = end_time - start_time
+        is_split = segment.get("is_split", False)
         
         # Generate audio with cloned voice
         audio = clone_voice(tts, text, voice_samples, conditioning_latents, i)
@@ -175,20 +222,47 @@ def generate_audio_segments(tts, aligned_segments, temp_dir, voice_samples, cond
             # Load audio to adjust speed
             audio_segment = AudioSegment.from_file(wav_path)
             
-            # Calculate speed factor for lip sync
+            # Calculate current duration in seconds
             current_duration = len(audio_segment) / 1000.0  # duration in seconds
-            speed_factor = current_duration / duration if duration > 0 else 1.0
+            
+            # Calculate adaptive speed factor for better synchronization
+            speed_factor = calculate_adaptive_speed_factor(current_duration, duration, sync_options)
+            
+            # For split segments, we might want to be more aggressive with timing
+            if is_split:
+                # Adjust speed factor more aggressively for split segments
+                if speed_factor > 1.0:
+                    speed_factor = min(speed_factor * 1.1, sync_options.get("max_speed_factor", 1.8))
+            
+            # Log the adjustment being made
+            print(f"Segment {i}: Duration {current_duration:.2f}s -> Target {duration:.2f}s, Speed factor: {speed_factor:.2f}")
             
             # Adjust audio speed if necessary
-            if abs(speed_factor - 1.0) > 0.1:  # If difference is significant
-                if speed_factor > 1.5:  # Limit maximum acceleration
-                    speed_factor = 1.5
-                    
+            if abs(speed_factor - 1.0) > 0.05:  # If difference is significant (5%)
                 # Use ffmpeg to adjust speed while maintaining pitch
                 adjusted_path = os.path.join(temp_dir, f"adjusted_{i}.wav")
+                
+                # Use different filters based on the speed factor
+                if speed_factor >= 0.5 and speed_factor <= 2.0:
+                    # For moderate adjustments, use atempo
+                    filter_complex = f"atempo={speed_factor}"
+                    
+                    # For larger adjustments, chain multiple atempo filters (atempo only works in range 0.5-2.0)
+                    if speed_factor > 2.0:
+                        factor1 = min(2.0, speed_factor)
+                        factor2 = speed_factor / factor1
+                        filter_complex = f"atempo={factor1},atempo={factor2}"
+                    elif speed_factor < 0.5:
+                        factor1 = max(0.5, speed_factor)
+                        factor2 = speed_factor / factor1
+                        filter_complex = f"atempo={factor1},atempo={factor2}"
+                else:
+                    # For extreme adjustments, use rubberband which handles extreme cases better
+                    filter_complex = f"asetrate=24000*{speed_factor},aresample=24000"
+                
                 result = subprocess.call([
                     "ffmpeg", "-y", "-i", wav_path, 
-                    "-filter:a", f"atempo={speed_factor}", 
+                    "-filter:a", filter_complex, 
                     adjusted_path
                 ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 
@@ -215,7 +289,10 @@ def generate_audio_segments(tts, aligned_segments, temp_dir, voice_samples, cond
                 "path": adjusted_path,
                 "start": start_time,
                 "end": end_time,
-                "duration": len(audio_segment) / 1000.0
+                "duration": len(audio_segment) / 1000.0,
+                "original_duration": duration,
+                "speed_factor": speed_factor,
+                "is_split": is_split
             })
         except Exception as e:
             print(f"Error generating audio segment {i}: {e}")

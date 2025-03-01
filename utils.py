@@ -162,4 +162,128 @@ def get_language_code_map():
         "ar": "ar_AR",  # Arabic
         "hi": "hi_IN",  # Hindi
         # Add more languages as needed
+    }
+
+def get_language_properties(source_lang=None, target_lang=None):
+    """
+    Returns a dictionary with language properties useful for synchronization.
+    
+    Args:
+        source_lang (str, optional): Source language code
+        target_lang (str, optional): Target language code
+        
+    Returns:
+        dict: Dictionary with language properties
+    """
+    # Base properties for various languages
+    language_properties = {
+        'en': {  # English (reference language)
+            'mbart_code': 'en_XX',
+            'avg_syllable_duration': 200,  # in milliseconds
+            'avg_words_per_minute': 150,
+            'length_ratio_to_english': 1.0,
+            'common_pause_markers': ['.', ',', ';', ':', '!', '?'],
+            'speech_rate_factor': 1.0
+        },
+        'it': {  # Italian
+            'mbart_code': 'it_IT',
+            'avg_syllable_duration': 210,
+            'avg_words_per_minute': 140,
+            'length_ratio_to_english': 1.1,  # Italian tends to be longer than English
+            'common_pause_markers': ['.', ',', ';', ':', '!', '?'],
+            'speech_rate_factor': 0.95
+        },
+        'fr': {  # French
+            'mbart_code': 'fr_XX',
+            'avg_syllable_duration': 215,
+            'avg_words_per_minute': 135,
+            'length_ratio_to_english': 1.15,
+            'common_pause_markers': ['.', ',', ';', ':', '!', '?'],
+            'speech_rate_factor': 0.9
+        },
+        'es': {  # Spanish
+            'mbart_code': 'es_XX',
+            'avg_syllable_duration': 205,
+            'avg_words_per_minute': 145,
+            'length_ratio_to_english': 1.05,
+            'common_pause_markers': ['.', ',', ';', ':', '!', '?', '¡', '¿'],
+            'speech_rate_factor': 0.98
+        },
+        'de': {  # German
+            'mbart_code': 'de_DE',
+            'avg_syllable_duration': 220,
+            'avg_words_per_minute': 130,
+            'length_ratio_to_english': 1.2,  # German words tend to be longer
+            'common_pause_markers': ['.', ',', ';', ':', '!', '?'],
+            'speech_rate_factor': 0.85
+        },
+        'ja': {  # Japanese
+            'mbart_code': 'ja_XX',
+            'avg_syllable_duration': 180,
+            'avg_words_per_minute': 170,
+            'length_ratio_to_english': 0.8,  # Japanese can be more compact
+            'common_pause_markers': ['。', '、', '！', '？', '…'],
+            'speech_rate_factor': 1.2
+        },
+        'zh': {  # Chinese
+            'mbart_code': 'zh_CN',
+            'avg_syllable_duration': 190,
+            'avg_words_per_minute': 160,
+            'length_ratio_to_english': 0.7,  # Chinese is typically more compact
+            'common_pause_markers': ['。', '，', '；', '：', '！', '？'],
+            'speech_rate_factor': 1.15
+        },
+        'ru': {  # Russian
+            'mbart_code': 'ru_RU',
+            'avg_syllable_duration': 225,
+            'avg_words_per_minute': 125,
+            'length_ratio_to_english': 1.25,
+            'common_pause_markers': ['.', ',', ';', ':', '!', '?'],
+            'speech_rate_factor': 0.8
+        }
+    }
+    
+    # If no specific languages are provided, return the full dictionary
+    if source_lang is None and target_lang is None:
+        return language_properties
+    
+    # If only source language is provided
+    if target_lang is None and source_lang in language_properties:
+        return language_properties[source_lang]
+    
+    # If both languages are provided, return a dictionary with comparative properties
+    if source_lang in language_properties and target_lang in language_properties:
+        source_props = language_properties[source_lang]
+        target_props = language_properties[target_lang]
+        
+        # Calculate relative properties between the two languages
+        relative_props = {
+            'source_lang': source_lang,
+            'target_lang': target_lang,
+            'length_ratio': target_props['length_ratio_to_english'] / source_props['length_ratio_to_english'],
+            'speech_rate_ratio': target_props['speech_rate_factor'] / source_props['speech_rate_factor'],
+            'source': source_props,
+            'target': target_props
+        }
+        
+        return relative_props
+    
+    # Default fallback if languages are not found
+    return language_properties.get('en', {})
+
+def get_sync_defaults():
+    """
+    Get default synchronization parameters.
+    
+    Returns:
+        Dictionary with default sync parameters
+    """
+    return {
+        "max_speed_factor": 1.8,        # Maximum acceleration factor
+        "min_speed_factor": 0.7,        # Minimum slowdown factor
+        "pause_threshold": -35,         # dB threshold for pause detection
+        "min_pause_duration": 100,      # Minimum pause duration in ms
+        "sync_tolerance": 300,          # Sync tolerance in ms
+        "adaptive_timing": True,        # Use adaptive timing based on language
+        "preserve_sentence_breaks": True # Preserve pauses between sentences
     } 
