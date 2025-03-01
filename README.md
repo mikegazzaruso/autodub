@@ -24,6 +24,7 @@ This project is a video translation pipeline that extracts speech from a video, 
 - **Separation of vocals and background music using Demucs**
 - **Caching mechanism to speed up repeated voice cloning processes**
 - **Full video processing pipeline with FFmpeg**
+- **Modular architecture for easy maintenance and extension**
 
 ---
 
@@ -39,8 +40,7 @@ Create a virtual environment and install required dependencies:
 ```bash
 python -m venv video_translate_env
 source video_translate_env/bin/activate  # On Windows use: video_translate_env\Scripts\activate
-pip install torch torchaudio torchvision
-pip install openai-whisper transformers librosa moviepy demucs soundfile pydub ffmpeg-python tqdm numpy scipy
+pip install -r requirements.txt
 ```
 
 ---
@@ -49,7 +49,7 @@ pip install openai-whisper transformers librosa moviepy demucs soundfile pydub f
 ### Run Translation on a Video
 To process a video with voice cloning:
 ```bash
-python video_translator.py --input path/to/video.mp4 --output path/to/output.mp4 --source-lang it --target-lang en --voice-samples path/to/voice_samples
+python main.py --input path/to/video.mp4 --output path/to/output.mp4 --source-lang it --target-lang en --voice-samples path/to/voice_samples
 ```
 
 ### Options
@@ -61,6 +61,19 @@ python video_translator.py --input path/to/video.mp4 --output path/to/output.mp4
 - `--no-cache` : Disable caching
 - `--clear-cache` : Clear all cached data
 - `--clear-voice-cache` : Clear only voice cache
+
+---
+
+## Project Structure
+The project has been modularized for better maintainability:
+
+- **main.py**: Entry point with argument parsing
+- **video_translator.py**: Main class with high-level workflow
+- **audio_processing.py**: Audio extraction and manipulation
+- **speech_recognition.py**: Transcription using Whisper
+- **translation.py**: Text translation using MBart
+- **voice_synthesis.py**: Voice cloning and generation using Tortoise
+- **utils.py**: Utility functions and cache management
 
 ---
 
@@ -83,12 +96,22 @@ This project implements a caching mechanism to speed up repeated processing:
 
 To clear cached models and latents:
 ```bash
-python video_translator.py --clear-cache
+python main.py --clear-cache
 ```
 To clear only the voice cache:
 ```bash
-python video_translator.py --clear-voice-cache
+python main.py --clear-voice-cache
 ```
+
+---
+
+## Extending the Project
+The modular architecture makes it easy to extend the project:
+
+- **Add new languages**: Update the language map in `utils.py`
+- **Improve voice synthesis**: Modify the voice synthesis module
+- **Change transcription model**: Update the speech recognition module
+- **Add new features**: Create new modules and integrate them into the workflow
 
 ---
 
