@@ -13,7 +13,7 @@ Major improvements to synchronization and usability:
 - Added comprehensive synchronization metrics analysis
 
 New features:
-- Added example.ipynb Jupyter notebook for easy usage in Google Colab
+- Added autodub.ipynb Jupyter notebook for easy usage in Google Colab
 - Implemented improved DTW-based synchronization evaluation
 - Added support for custom synchronization configurations
 - Enhanced segment positioning based on natural pauses
