@@ -1,23 +1,57 @@
-Versione: 0.1.0a
+Version: 0.2.0
 
 Changelog:
 
-0.1.0a (28 Febbraio 2025)
+0.2.0 (March 1, 2025)
 
-Rilascio iniziale del tool di traduzione e clonazione vocale per video.
+Complete code restructuring into a modular architecture:
+- Split monolithic file into specialized modules
+- Created main.py as the main entry point
+- Separated logic into video_translator.py, speech_recognition.py, translation.py, voice_synthesis.py, audio_processing.py, and utils.py
+- Added __init__.py to make the project a Python package
 
-Implementazione di Whisper per il riconoscimento vocale.
+Maintainability improvements:
+- Each module has a specific and well-defined responsibility
+- Reduced complexity of individual files
+- Improved code readability
 
-Utilizzo di MBart per la traduzione multilingue.
+Documentation improvements:
+- Updated README.md with the new modular structure
+- Detailed documentation for each module and function
+- Added explanatory docstrings for all main functions
 
-Integrazione di Tortoise-TTS per la sintesi vocale con clonazione della voce.
+Development tools:
+- Added requirements.txt to manage dependencies
+- Created test_import.py to verify module integrity
+- Added run_original.py for comparison with the previous version
 
-Sincronizzazione automatica del parlato con i tempi del video.
+No functional changes:
+- Maintained full compatibility with the previous version
+- Preserved the existing cache system
+- Same audio/video processing capabilities
 
-Gestione avanzata della cache per ottimizzare i tempi di elaborazione.
+TODO:
+- Implement Lip Sync functionality to match translated audio with video mouth movements
+- Optimize synchronization between original and translated audio segments
+- Add support for more languages and voice models
+- Create a graphical user interface for easier usage
 
-Separazione vocale AI con Demucs per un doppiaggio più pulito.
+---
 
-Supporto a più lingue per la localizzazione multilingue.
+# Version History
 
-Struttura modulare per facilitare miglioramenti futuri.
+## 0.1.x Series
+
+### 0.1.0a (February 28, 2025)
+
+Initial release of the video translation and voice cloning tool.
+
+Features:
+- Implementation of Whisper for speech recognition
+- Use of MBart for multilingual translation
+- Integration of Tortoise-TTS for voice synthesis with voice cloning
+- Automatic speech synchronization with video timing
+- Advanced cache management to optimize processing times
+- AI vocal separation with Demucs for cleaner dubbing
+- Support for multiple languages for multilingual localization
+- Modular structure to facilitate future improvements
