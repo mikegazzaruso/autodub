@@ -124,7 +124,7 @@ video_translator/
 ├── audio_processing.py     # Audio processing module
 ├── sync_evaluation.py      # Synchronization evaluation module
 ├── utils.py                # Utility functions
-└── example.ipynb           # Jupyter notebook for Google Colab
+└── autodub.ipynb           # Jupyter notebook for Google Colab
 ```
 
 ---
