@@ -1,12 +1,63 @@
-Version: 0.2.0
+Version: 0.3.0
 
 Changelog:
+
+0.3.0 (March 1, 2025)
+
+Major improvements to synchronization and usability:
+- Improved synchronization algorithm with better natural pause detection
+- Fixed synchronization score calculation for more accurate metrics
+- Added Jupyter notebook support for Google Colab integration
+- Renamed main script to autodub.py for better clarity
+- Enhanced visualization tools for synchronization debugging
+- Added comprehensive synchronization metrics analysis
+
+New features:
+- Added example.ipynb Jupyter notebook for easy usage in Google Colab
+- Implemented improved DTW-based synchronization evaluation
+- Added support for custom synchronization configurations
+- Enhanced segment positioning based on natural pauses
+- Added visualization of synchronization quality metrics
+
+Technical improvements:
+- Fixed bug in synchronization score calculation
+- Enhanced audio_processing.py with improved pause detection
+- Updated sync_evaluation.py with more accurate metrics
+- Improved segment positioning algorithm
+- Added support for advanced synchronization parameters
+- Optimized voice cloning process with CLVP
+- Renamed main.py to autodub.py for better clarity and usability
+
+0.2.1 (March 1, 2025)
+
+Enhanced audio synchronization system:
+- Added advanced synchronization algorithms for better alignment between original and translated audio
+- Implemented natural pause detection for improved segment placement
+- Created adaptive speed adjustment based on linguistic properties
+- Added language-specific timing parameters for more natural-sounding translations
+- Developed synchronization quality evaluation metrics
+- Implemented visualization tools for synchronization debugging
+
+New features:
+- Added command-line options for fine-tuning synchronization parameters
+- Support for JSON configuration files for synchronization settings
+- Language-specific properties database for optimized translations
+- Intelligent segment splitting based on linguistic boundaries
+- Visualization of synchronization quality for debugging
+
+Technical improvements:
+- Added new sync_evaluation.py module for measuring synchronization quality
+- Enhanced utils.py with language-specific properties
+- Updated voice_synthesis.py with adaptive speed algorithms
+- Improved translation.py with intelligent segment alignment
+- Enhanced audio_processing.py with natural pause detection
+- Updated autodub.py (formerly main.py) to support new synchronization options
 
 0.2.0 (March 1, 2025)
 
 Complete code restructuring into a modular architecture:
 - Split monolithic file into specialized modules
-- Created main.py as the main entry point
+- Created autodub.py (formerly main.py) as the main entry point
 - Separated logic into video_translator.py, speech_recognition.py, translation.py, voice_synthesis.py, audio_processing.py, and utils.py
 - Added __init__.py to make the project a Python package
 
@@ -32,13 +83,27 @@ No functional changes:
 
 TODO:
 - Implement Lip Sync functionality to match translated audio with video mouth movements
-- Optimize synchronization between original and translated audio segments
 - Add support for more languages and voice models
 - Create a graphical user interface for easier usage
+- Implement batch processing for multiple videos
+- Add support for subtitle generation and embedding
 
 ---
 
 # Version History
+
+## 0.3.x Series
+
+### 0.3.0 (March 1, 2025)
+Major improvements to synchronization metrics, Jupyter notebook support, and renamed main script to autodub.py.
+
+## 0.2.x Series
+
+### 0.2.1 (March 1, 2025)
+Enhanced audio synchronization system with advanced algorithms and language-specific optimizations.
+
+### 0.2.0 (March 1, 2025)
+Complete code restructuring into a modular architecture.
 
 ## 0.1.x Series
 

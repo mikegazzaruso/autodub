@@ -2,6 +2,7 @@
 
 **Author:** Mike Gazzaruso  
 **License:** GNU/GPL v3  
+**Version:** 0.3.0
 
 ## Overview
 This project is a video translation pipeline that extracts speech from a video, transcribes it, translates it, and generates a voice-cloned speech using AI. The generated speech is then overlaid on the original video, replacing the original voice while preserving background sounds. It utilizes:
@@ -25,6 +26,13 @@ This project is a video translation pipeline that extracts speech from a video, 
 - **Caching mechanism to speed up repeated voice cloning processes**
 - **Full video processing pipeline with FFmpeg**
 - **Modular architecture for easy maintenance and extension**
+- **Advanced Synchronization**: Aligns translated audio with the original video timing using:
+  - Natural pause detection
+  - Adaptive speed adjustment
+  - Language-specific timing parameters
+  - Intelligent segment splitting
+- **Jupyter Notebook Support**: Easy integration with Google Colab via example.ipynb
+- **Comprehensive Synchronization Metrics**: Detailed analysis of synchronization quality
 
 ---
 
@@ -49,8 +57,39 @@ pip install -r requirements.txt
 ### Run Translation on a Video
 To process a video with voice cloning:
 ```bash
-python main.py --input path/to/video.mp4 --output path/to/output.mp4 --source-lang it --target-lang en --voice-samples path/to/voice_samples
+python autodub.py --input path/to/video.mp4 --output path/to/output.mp4 --source-lang it --target-lang en --voice-samples path/to/voice_samples
 ```
+
+### With Synchronization Options
+```bash
+python autodub.py --input path/to/video.mp4 --output path/to/output.mp4 --source-lang it --target-lang en --max-speed 1.5 --min-speed 0.8 --pause-threshold -30 --min-pause-duration 200
+```
+
+### Using a Synchronization Configuration File
+Create a JSON file with your synchronization settings:
+```json
+{
+  "max_speed_factor": 1.5,
+  "min_speed_factor": 0.8,
+  "pause_threshold": -30,
+  "min_pause_duration": 200,
+  "adaptive_timing": true,
+  "preserve_sentence_breaks": true
+}
+```
+Then run:
+```bash
+python autodub.py --input path/to/video.mp4 --output path/to/output.mp4 --source-lang it --target-lang en --sync-config sync_settings.json
+```
+
+### Using Google Colab
+You can also use our Jupyter notebook for easy integration with Google Colab:
+1. Upload the example.ipynb notebook to Google Colab
+2. Follow the step-by-step instructions in the notebook
+3. Upload your video and voice samples
+4. Configure synchronization settings
+5. Run the translation process
+6. Download the translated video
 
 ### Options
 - `--input` : Path to the input video file
@@ -61,19 +100,32 @@ python main.py --input path/to/video.mp4 --output path/to/output.mp4 --source-la
 - `--no-cache` : Disable caching
 - `--clear-cache` : Clear all cached data
 - `--clear-voice-cache` : Clear only voice cache
+- `--keep-temp` : Keep temporary files after processing
+- `--sync-config` : Path to JSON file with synchronization configuration
+- `--max-speed` : Maximum speed factor for audio adjustment
+- `--min-speed` : Minimum speed factor for audio adjustment
+- `--pause-threshold` : dB threshold for pause detection
+- `--min-pause-duration` : Minimum pause duration in milliseconds
+- `--no-adaptive-timing` : Disable adaptive timing based on language
+- `--no-preserve-breaks` : Do not preserve sentence breaks
 
 ---
 
 ## Project Structure
-The project has been modularized for better maintainability:
 
-- **main.py**: Entry point with argument parsing
-- **video_translator.py**: Main class with high-level workflow
-- **audio_processing.py**: Audio extraction and manipulation
-- **speech_recognition.py**: Transcription using Whisper
-- **translation.py**: Text translation using MBart
-- **voice_synthesis.py**: Voice cloning and generation using Tortoise
-- **utils.py**: Utility functions and cache management
+```
+video_translator/
+├── __init__.py             # Package initialization
+├── autodub.py              # Main entry point
+├── video_translator.py     # VideoTranslator class
+├── speech_recognition.py   # Speech recognition module
+├── translation.py          # Translation module
+├── voice_synthesis.py      # Voice synthesis module
+├── audio_processing.py     # Audio processing module
+├── sync_evaluation.py      # Synchronization evaluation module
+├── utils.py                # Utility functions
+└── example.ipynb           # Jupyter notebook for Google Colab
+```
 
 ---
 
@@ -96,11 +148,11 @@ This project implements a caching mechanism to speed up repeated processing:
 
 To clear cached models and latents:
 ```bash
-python main.py --clear-cache
+python autodub.py --clear-cache
 ```
 To clear only the voice cache:
 ```bash
-python main.py --clear-voice-cache
+python autodub.py --clear-voice-cache
 ```
 
 ---
