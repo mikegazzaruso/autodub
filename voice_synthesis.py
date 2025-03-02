@@ -39,7 +39,7 @@ def prepare_voice_samples(tts, voice_samples_dir, voice_samples=None, conditioni
         Tuple of (voice_samples, conditioning_latents)
     """
     if conditioning_latents is not None and voice_samples is not None:
-        print("Using cached voice conditioning latents")
+        print("Using provided voice samples and conditioning latents")
         return voice_samples, conditioning_latents
     
     if not voice_samples_dir or not os.path.exists(voice_samples_dir):
@@ -80,7 +80,7 @@ def prepare_voice_samples(tts, voice_samples_dir, voice_samples=None, conditioni
         print(traceback.format_exc())
         return None, None
 
-def clone_voice(tts, text, voice_samples, conditioning_latents, segment_idx=0):
+def clone_voice(tts, text, voice_samples, conditioning_latents, segment_idx=0, use_cache=True):
     """
     Generate audio with cloned voice.
     
@@ -90,6 +90,7 @@ def clone_voice(tts, text, voice_samples, conditioning_latents, segment_idx=0):
         voice_samples: Voice samples for cloning
         conditioning_latents: Conditioning latents for voice cloning
         segment_idx: Index of the current segment
+        use_cache: Whether to use cached conditioning latents
         
     Returns:
         Generated audio as numpy array
@@ -97,12 +98,18 @@ def clone_voice(tts, text, voice_samples, conditioning_latents, segment_idx=0):
     print(f"Generating audio for segment {segment_idx + 1}...")
     
     try:
-        if conditioning_latents is not None:
-            print(f"Using cached voice conditioning for generation...")
-            # Use the cached conditioning latents
+        if use_cache and conditioning_latents is not None:
+            print(f"Using pre-computed voice conditioning latents for generation...")
+            # Use the conditioning latents
             gen = tts.tts_with_preset(text, 
                                      conditioning_latents=conditioning_latents,
                                      preset="fast")  # Options: ultra_fast, fast, standard, high_quality
+        elif voice_samples is not None and len(voice_samples) > 0:
+            print(f"Using voice samples directly for generation...")
+            # Use the voice samples directly
+            gen = tts.tts_with_preset(text, 
+                                     voice_samples=voice_samples,
+                                     preset="fast")
         else:
             print("Using default voice...")
             gen = tts.tts(text, voice_samples=None)
@@ -154,7 +161,7 @@ def calculate_adaptive_speed_factor(current_duration, target_duration, sync_opti
     else:
         return 1.0  # No adjustment needed
 
-def generate_audio_segments(tts, aligned_segments, temp_dir, voice_samples, conditioning_latents, sync_options=None):
+def generate_audio_segments(tts, aligned_segments, temp_dir, voice_samples, conditioning_latents, sync_options=None, use_cache=True):
     """
     Generate audio segments for each translated segment.
     
@@ -165,6 +172,7 @@ def generate_audio_segments(tts, aligned_segments, temp_dir, voice_samples, cond
         voice_samples: Voice samples for cloning
         conditioning_latents: Conditioning latents for voice cloning
         sync_options: Dictionary with synchronization options
+        use_cache: Whether to use cached conditioning latents
         
     Returns:
         List of audio segment information
@@ -188,7 +196,7 @@ def generate_audio_segments(tts, aligned_segments, temp_dir, voice_samples, cond
         is_split = segment.get("is_split", False)
         
         # Generate audio with cloned voice
-        audio = clone_voice(tts, text, voice_samples, conditioning_latents, i)
+        audio = clone_voice(tts, text, voice_samples, conditioning_latents, i, use_cache)
         
         # Save audio temporarily using numpy.save which doesn't rely on audio format
         temp_audio_path = os.path.join(temp_dir, f"segment_{i}.npy")

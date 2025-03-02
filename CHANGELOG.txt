@@ -1,6 +1,22 @@
-Version: 0.3.0
+Version: 0.3.1
 
 Changelog:
+
+0.3.1 (March 1, 2025)
+
+Bug fixes and improvements to voice cloning and cache management:
+- Fixed issue with voice cloning when using --no-cache option
+- Improved messaging for voice conditioning latents generation
+- Enhanced cache management for voice samples
+- Ensured direct use of voice samples when cache is disabled
+- Updated documentation for cache management options
+
+Technical improvements:
+- Modified clone_voice function to properly handle use_cache parameter
+- Updated generate_audio_segments to pass use_cache parameter
+- Fixed misleading messages about voice conditioning latents
+- Ensured voice samples are used directly when cache is disabled
+- Added clear documentation about cache management options
 
 0.3.0 (March 1, 2025)
 
@@ -96,6 +112,9 @@ TODO:
 
 ### 0.3.0 (March 1, 2025)
 Major improvements to synchronization metrics, Jupyter notebook support, and renamed main script to autodub.py.
+
+### 0.3.1 (March 1, 2025)
+Bug fixes and improvements to voice cloning and cache management.
 
 ## 0.2.x Series
 

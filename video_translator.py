@@ -87,6 +87,7 @@ class VideoTranslator:
         self.conditioning_latents = None
         
         # Try to load cached voice if available
+        # Only load cached voice if use_cache is True
         if self.use_cache and self.voice_samples_dir:
             self._load_cached_voice()
         
@@ -122,8 +123,16 @@ class VideoTranslator:
 
     def prepare_voice_samples(self):
         """Prepare voice samples for cloning."""
-        if self.conditioning_latents is not None and self.voice_samples is not None:
-            print("Using cached voice conditioning latents")
+        # If use_cache is False, we should always regenerate the voice samples
+        # even if they are already loaded in memory
+        if not self.use_cache:
+            print("Cache disabled, generating new voice conditioning latents...")
+            self.voice_samples = None
+            self.conditioning_latents = None
+        
+        # If we already have the conditioning latents in memory and use_cache is True
+        if self.use_cache and self.conditioning_latents is not None and self.voice_samples is not None:
+            print("Using voice conditioning latents from memory")
             return self.voice_samples, self.conditioning_latents
         
         voice_samples, conditioning_latents = prepare_voice_samples(
@@ -131,8 +140,14 @@ class VideoTranslator:
         )
         
         if voice_samples is not None and conditioning_latents is not None:
-            # Save to cache for future use
-            self._save_voice_to_cache(voice_samples, conditioning_latents)
+            # Save to cache for future use only if use_cache is True
+            if self.use_cache:
+                self._save_voice_to_cache(voice_samples, conditioning_latents)
+            else:
+                # Just store in instance for this run
+                print("Storing voice conditioning latents in memory (not in cache)")
+                self.voice_samples = voice_samples
+                self.conditioning_latents = conditioning_latents
         
         return voice_samples, conditioning_latents
 
@@ -269,7 +284,8 @@ class VideoTranslator:
                 self.temp_dir,
                 self.voice_samples,
                 self.conditioning_latents,
-                sync_options=self.sync_options
+                sync_options=self.sync_options,
+                use_cache=self.use_cache
             )
             
             # Combine audio segments

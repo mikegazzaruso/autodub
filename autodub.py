@@ -3,10 +3,10 @@ import os
 import sys
 import json
 from video_translator import VideoTranslator
-from utils import get_sync_defaults
+from utils import get_sync_defaults, setup_cache_directory, clear_cache
 
 def main():
-    parser = argparse.ArgumentParser(description='AutoDub v0.3.0 - Video Translator with voice cloning and advanced synchronization')
+    parser = argparse.ArgumentParser(description='AutoDub v0.3.1 - Video Translator with voice cloning and advanced synchronization')
     parser.add_argument('--input', required=True, help='Path to input video')
     parser.add_argument('--output', required=True, help='Path to output video')
     parser.add_argument('--source-lang', default='it', help='Source language (default: it)')
@@ -64,6 +64,15 @@ def main():
     if args.no_preserve_breaks:
         sync_options["preserve_sentence_breaks"] = False
     
+    # Handle cache clearing before creating the VideoTranslator
+    cache_dir = setup_cache_directory()
+    if args.clear_cache:
+        print("Clearing all cache before initialization...")
+        clear_cache(cache_dir, voice_only=False)
+    elif args.clear_voice_cache:
+        print("Clearing voice cache before initialization...")
+        clear_cache(cache_dir, voice_only=True)
+    
     # Create the video translator
     translator = VideoTranslator(
         source_lang=args.source_lang,
@@ -74,12 +83,6 @@ def main():
         sync_options=sync_options,
         keep_temp=args.keep_temp
     )
-    
-    # Handle cache clearing if requested
-    if args.clear_cache:
-        translator.clear_cache(voice_only=False)
-    elif args.clear_voice_cache:
-        translator.clear_cache(voice_only=True)
     
     # Process the video
     translator.process_video(args.input, args.output)

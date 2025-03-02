@@ -58,7 +58,9 @@ Scripts/
 share/
 conversions/
 voice_samples/
+voice_samples_ma/
 video_translate_env/
 test.mov
 test_out.mov 
 cache/
+test.mp4
