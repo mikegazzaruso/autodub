@@ -84,7 +84,7 @@ python autodub.py --input path/to/video.mp4 --output path/to/output.mp4 --source
 
 ### Using Google Colab
 You can also use our Jupyter notebook for easy integration with Google Colab:
-1. Upload the example.ipynb notebook to Google Colab
+1. Upload the autodub.ipynb notebook to Google Colab
 2. Follow the step-by-step instructions in the notebook
 3. Upload your video and voice samples
 4. Configure synchronization settings
