@@ -124,23 +124,39 @@ def clear_cache(cache_dir, voice_only=False):
         cache_dir: Path to the cache directory
         voice_only: Whether to clear only voice cache files
     """
+    if not os.path.exists(cache_dir):
+        print(f"Cache directory {cache_dir} does not exist. Creating it...")
+        os.makedirs(cache_dir, exist_ok=True)
+        return
+    
     if voice_only:
         print("Clearing voice cache...")
         voice_cache_files = [f for f in os.listdir(cache_dir) if f.startswith("voice_latents_")]
+        if not voice_cache_files:
+            print("No voice cache files found.")
         for file in voice_cache_files:
             try:
-                os.remove(os.path.join(cache_dir, file))
+                file_path = os.path.join(cache_dir, file)
+                os.remove(file_path)
+                print(f"Removed: {file_path}")
             except Exception as e:
                 print(f"Error removing {file}: {e}")
     else:
         print("Clearing all cache...")
+        files_removed = 0
         for file in os.listdir(cache_dir):
             try:
                 file_path = os.path.join(cache_dir, file)
                 if os.path.isfile(file_path):
                     os.remove(file_path)
+                    files_removed += 1
             except Exception as e:
                 print(f"Error removing {file}: {e}")
+        
+        if files_removed > 0:
+            print(f"Removed {files_removed} cache files.")
+        else:
+            print("No cache files found to remove.")
 
 def get_language_code_map():
     """
