@@ -1,7 +1,7 @@
 import os
 import subprocess
 import numpy as np
-from moviepy.editor import VideoFileClip, AudioFileClip
+from moviepy import VideoFileClip, AudioFileClip
 from pydub import AudioSegment
 import demucs.separate
 import traceback
