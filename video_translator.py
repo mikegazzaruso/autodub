@@ -23,7 +23,8 @@ warnings.filterwarnings('ignore')
 
 class VideoTranslator:
     def __init__(self, source_lang="it", target_lang="en", voice_samples_dir=None, 
-                 input_video_path=None, use_cache=True, sync_options=None, keep_temp=False):
+                 input_video_path=None, use_cache=True, sync_options=None, keep_temp=False,
+                 stop_callback=None):
         """
         Initializes the video translator.
         
@@ -35,12 +36,14 @@ class VideoTranslator:
             use_cache: Whether to use cached voice and models (default: True)
             sync_options: Dictionary with synchronization options (optional)
             keep_temp: Whether to keep temporary files after processing (default: False)
+            stop_callback: Function to call to check if the process should be stopped (optional)
         """
         self.source_lang = source_lang
         self.target_lang = target_lang
         self.voice_samples_dir = voice_samples_dir
         self.use_cache = use_cache
         self.keep_temp = keep_temp
+        self.stop_callback = stop_callback
         
         # Create working directory
         self.temp_dir = create_work_directory(input_video_path)
@@ -233,16 +236,37 @@ class VideoTranslator:
             start_time = time.time()
             print(f"Starting video processing: {video_path}")
             
+            # Check if process should be stopped immediately
+            if self.stop_callback and self.stop_callback():
+                print("Process interrupted by user at the beginning.")
+                return
+            
             # Prepare voice conditioning latents before processing (only once)
             if self.voice_samples_dir:
                 self.prepare_voice_samples()
+                
+                # Check if process should be stopped
+                if self.stop_callback and self.stop_callback():
+                    print("Process interrupted by user during voice sample preparation.")
+                    return
             
             # Extract audio from video
+            print("Extracting audio from video...")
             audio_path = extract_audio(video_path, self.temp_dir)
+            
+            # Check if process should be stopped
+            if self.stop_callback and self.stop_callback():
+                print("Process interrupted by user after audio extraction.")
+                return
             
             # Transcribe audio
             print("Transcribing audio...")
             transcription = transcribe_audio(self.transcriber, audio_path, self.source_lang)
+            
+            # Check if process should be stopped
+            if self.stop_callback and self.stop_callback():
+                print("Process interrupted by user after transcription.")
+                return
             
             # Save transcription to file for reference
             transcription_path = os.path.join(self.temp_dir, "transcription.json")
@@ -259,6 +283,11 @@ class VideoTranslator:
                 length_ratio = 1.0
                 speech_rate_ratio = 1.0
             
+            # Check if process should be stopped
+            if self.stop_callback and self.stop_callback():
+                print("Process interrupted by user before translation.")
+                return
+            
             # Align translated segments with original timings
             print("Translating and aligning segments...")
             self.aligned_segments = align_segments(
@@ -270,6 +299,11 @@ class VideoTranslator:
                 length_ratio=length_ratio,
                 speech_rate_ratio=speech_rate_ratio
             )
+            
+            # Check if process should be stopped
+            if self.stop_callback and self.stop_callback():
+                print("Process interrupted by user after translation and alignment.")
+                return
             
             # Save aligned segments for reference
             aligned_path = os.path.join(self.temp_dir, "aligned_segments.json")
@@ -288,6 +322,11 @@ class VideoTranslator:
                 use_cache=self.use_cache
             )
             
+            # Check if process should be stopped
+            if self.stop_callback and self.stop_callback():
+                print("Process interrupted by user after audio generation.")
+                return
+            
             # Combine audio segments
             print("Combining audio segments...")
             final_audio_path = combine_audio_segments(
@@ -296,6 +335,11 @@ class VideoTranslator:
                 self.temp_dir,
                 sync_options=self.sync_options
             )
+            
+            # Check if process should be stopped
+            if self.stop_callback and self.stop_callback():
+                print("Process interrupted by user after audio combination.")
+                return
             
             # Evaluate synchronization quality
             print("Evaluating synchronization quality...")
@@ -309,9 +353,19 @@ class VideoTranslator:
             except Exception as e:
                 print(f"Error during synchronization evaluation: {e}")
             
+            # Check if process should be stopped
+            if self.stop_callback and self.stop_callback():
+                print("Process interrupted by user after synchronization evaluation.")
+                return
+            
             # Combine original video with translated audio
             print("Creating final video...")
             result_path = combine_video_and_audio(video_path, final_audio_path, output_path)
+            
+            # Check if process should be stopped
+            if self.stop_callback and self.stop_callback():
+                print("Process interrupted by user after creating final video.")
+                return
             
             elapsed_time = time.time() - start_time
             print(f"Processing completed in {elapsed_time:.2f} seconds")
@@ -320,12 +374,9 @@ class VideoTranslator:
             # Clean up temporary files unless keep_temp is True
             if not self.keep_temp:
                 print("Cleaning up temporary files...")
-                for file in os.listdir(self.temp_dir):
-                    if file.endswith(('.wav', '.json', '.txt')) and not file.startswith('sync_'):
-                        try:
-                            os.remove(os.path.join(self.temp_dir, file))
-                        except:
-                            pass
+                # Keep this code commented out for now to avoid deleting files
+                # import shutil
+                # shutil.rmtree(self.temp_dir)
             
             return result_path
             

@@ -2,7 +2,7 @@
 
 **Author:** Mike Gazzaruso  
 **License:** GNU/GPL v3  
-**Version:** 0.3.1
+**Version:** 0.5.0
 
 ## Overview
 This project is a video translation pipeline that extracts speech from a video, transcribes it, translates it, and generates a voice-cloned speech using AI. The generated speech is then overlaid on the original video, replacing the original voice while preserving background sounds. It utilizes:
@@ -33,6 +33,9 @@ This project is a video translation pipeline that extracts speech from a video, 
   - Intelligent segment splitting
 - **Jupyter Notebook Support**: Easy integration with Google Colab via example.ipynb
 - **Comprehensive Synchronization Metrics**: Detailed analysis of synchronization quality
+- **Real-time Process Control**: Ability to stop the translation process at any time
+- **Live Progress Updates**: Detailed text display of process phases in real-time
+- **Enhanced Error Handling**: Robust handling of file permissions and language codes
 
 ---
 
@@ -50,6 +53,20 @@ python -m venv video_translate_env
 source video_translate_env/bin/activate  # On Windows use: video_translate_env\Scripts\activate
 pip install -r requirements.txt
 ```
+
+### Streamlit GUI (New!)
+The project now includes a Streamlit-based graphical user interface for easier use:
+
+```bash
+# Run the Streamlit interface
+streamlit run app.py
+
+# Or use the convenience scripts
+./run_streamlit.sh    # On Linux/Mac
+run_streamlit.bat     # On Windows
+```
+
+For more details on the Streamlit interface, see [README_STREAMLIT.md](README_STREAMLIT.md).
 
 ---
 
