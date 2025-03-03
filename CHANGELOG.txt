@@ -1,6 +1,37 @@
-Version: 0.3.1
+Version: 0.5.0
 
 Changelog:
+
+0.5.0 (March 3, 2025)
+
+New features:
+- Added real-time process interruption with "Stop Translation" button
+- Implemented detailed text display of process phases in real-time
+- Enhanced error handling for file permissions and language codes
+- Improved user interface with better feedback during translation
+
+Technical improvements:
+- Added threading support for background processing while keeping UI responsive
+- Implemented session state management for process control
+- Added stop_callback parameter to VideoTranslator for safe interruption
+- Enhanced error handling with try-except blocks for file operations
+- Fixed language code mapping to prevent "Unsupported language" errors
+- Updated copyright information and application title
+
+0.3.2 (March 3, 2023)
+
+New features:
+- Added Streamlit-based graphical user interface for easier use
+- Improved user experience with progress indicators and status updates
+- Added custom styling and visual enhancements to the interface
+- Created convenience scripts for launching the Streamlit interface
+
+Technical improvements:
+- Added streamlit dependency to requirements.txt
+- Created modular app.py file for the Streamlit interface
+- Added custom CSS styling for better visual appearance
+- Implemented progress tracking during video processing
+- Created comprehensive documentation for the Streamlit interface
 
 0.3.1 (March 1, 2025)
 
@@ -115,6 +146,20 @@ Major improvements to synchronization metrics, Jupyter notebook support, and ren
 
 ### 0.3.1 (March 1, 2025)
 Bug fixes and improvements to voice cloning and cache management.
+
+### 0.3.2 (March 3, 2023)
+New features:
+- Added Streamlit-based graphical user interface for easier use
+- Improved user experience with progress indicators and status updates
+- Added custom styling and visual enhancements to the interface
+- Created convenience scripts for launching the Streamlit interface
+
+Technical improvements:
+- Added streamlit dependency to requirements.txt
+- Created modular app.py file for the Streamlit interface
+- Added custom CSS styling for better visual appearance
+- Implemented progress tracking during video processing
+- Created comprehensive documentation for the Streamlit interface
 
 ## 0.2.x Series
 

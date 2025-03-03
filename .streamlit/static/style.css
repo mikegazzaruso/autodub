@@ -1,0 +1,78 @@
+/* Stile personalizzato per l'interfaccia AutoDub */
+
+/* Titolo principale */
+.main-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #FF4B4B;
+    margin-bottom: 1rem;
+}
+
+/* Sottotitolo */
+.subtitle {
+    font-size: 1.2rem;
+    font-weight: 400;
+    color: #FAFAFA;
+    margin-bottom: 2rem;
+}
+
+/* Pulsanti */
+.stButton > button {
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+}
+
+/* Pulsante primario */
+.stButton > button[data-baseweb="button"] {
+    background-color: #FF4B4B;
+    color: white;
+}
+
+/* Schede */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 2rem;
+}
+
+.stTabs [data-baseweb="tab"] {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+/* Caricamento file */
+[data-testid="stFileUploader"] {
+    border: 1px dashed #FF4B4B;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+/* Sezioni */
+.section-header {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    color: #FF4B4B;
+}
+
+/* Spinner */
+.stSpinner > div {
+    border-color: #FF4B4B !important;
+}
+
+/* Messaggio di successo */
+.stSuccess {
+    background-color: rgba(40, 167, 69, 0.2);
+    border-left-color: #28a745;
+}
+
+/* Messaggio di errore */
+.stError {
+    background-color: rgba(220, 53, 69, 0.2);
+    border-left-color: #dc3545;
+}
+
+/* Barra di avanzamento */
+.stProgress > div > div {
+    background-color: #FF4B4B;
+} 
