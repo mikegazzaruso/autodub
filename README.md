@@ -186,8 +186,6 @@ The modular architecture makes it easy to extend the project:
 
 ## Future Improvements
 - **Lip Sync Support**: The system will soon include precise lip synchronization.
-- **GUI Interface**: A graphical user interface will be added for ease of use.
-- **More Language Support**: Additional languages will be supported in future updates.
 
 ---
 
