@@ -21,8 +21,57 @@ def extract_audio(video_path, temp_dir):
     """
     print("Extracting audio from video...")
     audio_path = os.path.join(temp_dir, "extracted_audio.wav")
-    video = VideoFileClip(video_path)
-    video.audio.write_audiofile(audio_path, codec='pcm_s16le', fps=16000)
+    
+    try:
+        # First try using MoviePy
+        video = VideoFileClip(video_path)
+        video.audio.write_audiofile(audio_path, codec='pcm_s16le', fps=16000)
+    except Exception as e:
+        print(f"MoviePy extraction failed: {str(e)}")
+        print("Trying direct FFmpeg extraction...")
+        
+        # Use FFmpeg directly with increased analyzeduration and probesize
+        # This should handle most common formats including iPhone videos
+        ffmpeg_cmd = [
+            "ffmpeg", 
+            "-i", video_path,
+            "-analyzeduration", "100000000",  # Increased analyzeduration (100M)
+            "-probesize", "100000000",        # Increased probesize (100M)
+            "-ac", "1",                       # Convert to mono
+            "-ar", "16000",                   # Set sample rate to 16kHz
+            "-vn",                            # No video
+            "-acodec", "pcm_s16le",           # PCM 16-bit output
+            audio_path
+        ]
+        
+        try:
+            subprocess.run(ffmpeg_cmd, check=True)
+            print("FFmpeg extraction successful")
+        except subprocess.CalledProcessError as ffmpeg_error:
+            print(f"FFmpeg extraction failed: {ffmpeg_error}")
+            
+            # Try one more time with map_channel to extract only the first audio stream
+            print("Trying to extract only the first audio stream...")
+            ffmpeg_cmd = [
+                "ffmpeg", 
+                "-i", video_path,
+                "-map", "0:a:0",              # Map only the first audio stream
+                "-analyzeduration", "100000000",
+                "-probesize", "100000000",
+                "-ac", "1",
+                "-ar", "16000",
+                "-vn",
+                "-acodec", "pcm_s16le",
+                audio_path
+            ]
+            
+            subprocess.run(ffmpeg_cmd, check=True)
+            print("FFmpeg extraction with first audio stream mapping successful")
+    
+    # Verify the audio file exists
+    if not os.path.exists(audio_path):
+        raise FileNotFoundError(f"Failed to extract audio to {audio_path}")
+        
     return audio_path
 
 def find_best_segment_position(segment, pauses, original_audio_length, sync_options):
