@@ -2,7 +2,7 @@
 
 **Author:** Mike Gazzaruso  
 **License:** GNU/GPL v3  
-**Version:** 0.5.1
+**Version:** 0.5.2
 
 ## Overview
 This project is a video translation pipeline that extracts speech from a video, transcribes it, translates it, and generates a voice-cloned speech using AI. The generated speech is then overlaid on the original video, replacing the original voice while preserving background sounds. It utilizes:
@@ -36,6 +36,7 @@ This project is a video translation pipeline that extracts speech from a video, 
 - **Real-time Process Control**: Ability to stop the translation process at any time
 - **Live Progress Updates**: Detailed text display of process phases in real-time
 - **Enhanced Error Handling**: Robust handling of file permissions and language codes
+- **Broad format support**: Works with various video formats including iPhone videos (MOV), MP4, and others
 
 ---
 

@@ -6,7 +6,7 @@ from video_translator import VideoTranslator
 from utils import get_sync_defaults, setup_cache_directory, clear_cache
 
 def main():
-    parser = argparse.ArgumentParser(description='AutoDub v0.5.1 - Video Translator with voice cloning and advanced synchronization')
+    parser = argparse.ArgumentParser(description='AutoDub v0.5.2 - Video Translator with voice cloning and advanced synchronization')
     parser.add_argument('--input', required=True, help='Path to input video')
     parser.add_argument('--output', required=True, help='Path to output video')
     parser.add_argument('--source-lang', default='it', help='Source language (default: it)')

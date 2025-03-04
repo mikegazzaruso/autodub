@@ -1,6 +1,18 @@
-Version: 0.5.1
+Version: 0.5.2
 
 Changelog:
+
+0.5.2 (March 4, 2025)
+
+Bug fixes:
+- Fixed audio extraction for iPhone videos with apac codec
+- Improved FFmpeg integration with increased analyzeduration and probesize parameters
+- Enhanced error handling for various video formats
+- Added fallback methods for audio extraction when primary method fails
+
+Technical improvements:
+- Implemented robust audio extraction for MOV, MP4 and other common formats
+- Added verification step to ensure audio extraction success
 
 0.5.1 (March 5, 2025)
 
