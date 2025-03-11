@@ -1,73 +1,73 @@
-# AutoDub - Interfaccia Streamlit
+# AutoDub - Streamlit Interface
 
-Questa è un'interfaccia grafica basata su Streamlit per il progetto AutoDub, che permette di tradurre automaticamente i video da una lingua all'altra, mantenendo la voce originale grazie alla clonazione vocale e sincronizzando l'audio con il video.
+This is a Streamlit-based graphical interface for the AutoDub project, which allows automatic video translation from one language to another while preserving the original voice through voice cloning and synchronizing the audio with the video.
 
-## Installazione
+## Installation
 
-1. Assicurati di aver installato tutte le dipendenze del progetto:
+1. Make sure you have installed all project dependencies:
 
-```bash
-pip install -r requirements.txt
-```
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-2. Avvia l'applicazione Streamlit:
+2. Run the Streamlit application:
 
-```bash
-streamlit run app.py
-```
+    ```bash
+    streamlit run app.py
+    ```
 
-## Utilizzo dell'interfaccia
+## Using the Interface
 
-L'interfaccia è divisa in due parti principali:
+The interface is divided into two main sections:
 
-### Barra laterale (Sidebar)
+### Sidebar
 
-Nella barra laterale puoi configurare:
+In the sidebar, you can configure:
 
-- **Lingue**: Seleziona la lingua di origine e di destinazione per la traduzione.
-- **Opzioni di cache**: Attiva/disattiva l'uso della cache e cancella la cache esistente.
-- **Opzioni avanzate**: Configura parametri avanzati per la sincronizzazione audio-video.
-- **File temporanei**: Scegli se mantenere i file temporanei dopo l'elaborazione.
+- **Languages**: Select the source and target language for translation.
+- **Cache options**: Enable/disable cache usage and clear existing cache.
+- **Advanced options**: Configure advanced parameters for audio-video synchronization.
+- **Temporary files**: Choose whether to keep temporary files after processing.
 
-### Area principale
+### Main Area
 
-L'area principale è organizzata in due schede:
+The main area is organized into two tabs:
 
-#### Traduzione Video
+#### Video Translation
 
-In questa scheda puoi:
+In this tab, you can:
 
-1. Caricare un video da tradurre
-2. Caricare campioni audio della voce da clonare (opzionale)
-3. Avviare il processo di traduzione
-4. Interrompere il processo di traduzione in qualsiasi momento
-5. Visualizzare in tempo reale i dettagli del processo di traduzione
-6. Visualizzare e scaricare il video tradotto
+1. **Upload a video** to be translated.
+2. **Upload audio samples** of the voice to be cloned (optional).
+3. **Start the translation process**.
+4. **Stop the translation process** at any time.
+5. **View real-time details** of the translation process.
+6. **Preview and download** the translated video.
 
-#### Informazioni
+#### Information
 
-Questa scheda contiene informazioni sul progetto e istruzioni su come utilizzare l'applicazione.
+This tab contains **project information** and **instructions** on how to use the application.
 
-## Flusso di lavoro
+## Workflow
 
-1. **Configura le opzioni** nella barra laterale
-2. **Carica il video** da tradurre
-3. **Carica i campioni vocali** (opzionale)
-4. **Avvia la traduzione** con il pulsante "Start Translation"
-5. **Monitora il progresso** attraverso i log in tempo reale
-6. **Interrompi il processo** in qualsiasi momento se necessario con il pulsante "Stop Translation"
-7. **Visualizza e scarica** il video tradotto al termine del processo
+1. **Configure the options** in the sidebar.
+2. **Upload the video** to be translated.
+3. **Upload voice samples** (optional).
+4. **Start the translation** using the **"Start Translation"** button.
+5. **Monitor progress** through real-time logs.
+6. **Stop the process** at any time if needed using the **"Stop Translation"** button.
+7. **Preview and download** the translated video once the process is complete.
 
-## Note importanti
+## Important Notes
 
-- Il processo di traduzione può richiedere diversi minuti, a seconda della lunghezza del video.
-- La qualità della clonazione vocale dipende dalla qualità e dalla quantità dei campioni vocali forniti.
-- Per risultati ottimali, fornire campioni vocali chiari e senza rumori di fondo.
-- L'applicazione crea una directory `conversions` nella cartella del progetto per salvare i video tradotti.
+- The translation process **may take several minutes**, depending on the video length.
+- The **quality of voice cloning** depends on the quality and quantity of the provided voice samples.
+- For **optimal results**, provide **clear voice samples** without background noise.
+- The application creates a **`conversions`** directory in the project folder to store translated videos.
 
-## Requisiti di sistema
+## System Requirements
 
-- Python 3.8 o superiore
-- GPU consigliata per prestazioni migliori (specialmente per la clonazione vocale)
-- Almeno 8GB di RAM
-- Spazio su disco sufficiente per i file temporanei e i video tradotti 
+- **Python 3.8 or later**
+- **GPU recommended** for better performance (especially for voice cloning)
+- At least **8GB of RAM**
+- **Sufficient disk space** for temporary files and translated videos
