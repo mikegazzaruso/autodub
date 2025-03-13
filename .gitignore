@@ -64,3 +64,5 @@ test.mov
 test_out.mov 
 cache/
 test.mp4
+venv/
+output/

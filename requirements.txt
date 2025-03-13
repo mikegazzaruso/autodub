@@ -1,7 +1,7 @@
---extra-index-url https://download.pytorch.org/whl/cu118 # Comment if you don't have Nvidia GPU / CUDA Support 
-torch
-torchaudio
-tortoise-tts
+# Requirements for macOS with Apple Silicon (M1/M2/M3)
+# Using native PyTorch with MPS support
+torch>=1.12.0
+torchaudio>=0.12.0
 librosa
 numpy
 moviepy
@@ -16,3 +16,4 @@ matplotlib
 scikit-learn
 streamlit
 sentencepiece
+psutil

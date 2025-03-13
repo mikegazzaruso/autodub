@@ -1,6 +1,20 @@
-Version: 0.5.2
+Version: 0.6.0
 
 Changelog:
+
+0.6.0 (March 13, 2025)
+
+New features:
+- Added Apple Silicon (M1/M2/M3) hardware acceleration support for Tortoise-TTS
+- Implemented MPS (Metal Performance Shaders) backend for PyTorch on macOS
+- Added automatic platform detection for optimal device selection (CUDA, MPS, or CPU)
+- Created macOS-specific setup script for easy installation
+
+Technical improvements:
+- Added compatibility patches for Tortoise-TTS on MPS
+- Implemented safe tensor operations with CPU fallback for unsupported MPS operations
+- Added platform-specific requirements generation
+- Enhanced performance on Apple Silicon Macs with 2-5x speedup compared to CPU
 
 0.5.2 (March 4, 2025)
 

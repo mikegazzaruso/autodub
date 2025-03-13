@@ -7,6 +7,17 @@ import math
 from pydub import AudioSegment
 from tortoise.api import TextToSpeech
 import traceback
+from device_utils import get_optimal_device, safe_to_device
+import platform
+
+# Import and apply MPS patches if on macOS
+is_mac = platform.system() == "Darwin"
+if is_mac:
+    try:
+        from tortoise_patch import patch_tortoise_for_mps
+        patch_tortoise_for_mps()
+    except Exception as e:
+        print(f"Warning: Failed to apply MPS patches: {e}")
 
 def initialize_tts():
     """
@@ -15,11 +26,8 @@ def initialize_tts():
     Returns:
         Initialized TextToSpeech object
     """
-    # Check GPU availability
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print(f"Using device: {device}")
-    if device.type == 'cpu':
-        print("WARNING: No GPU detected. Tortoise-TTS may be very slow on CPU.")
+    # Get the optimal device based on platform and hardware
+    device = get_optimal_device()
     
     # Initialize TorToise TTS
     tts = TextToSpeech(device=device)
@@ -114,16 +122,13 @@ def clone_voice(tts, text, voice_samples, conditioning_latents, segment_idx=0, u
             print("Using default voice...")
             gen = tts.tts(text, voice_samples=None)
         
-        # Get the first result
-        audio = gen[0].cpu().numpy()
+        # Get the first result and safely move to CPU
+        audio = safe_to_device(gen[0], torch.device('cpu')).numpy()
         return audio
     except Exception as e:
         print(f"Error during audio generation: {e}")
         print(traceback.format_exc())
-        
-        # Create silent audio as fallback
-        print("Creating silent audio as fallback...")
-        return np.zeros(int(24000 * 3))  # 3 seconds of silence at 24kHz
+        return None
 
 def calculate_adaptive_speed_factor(current_duration, target_duration, sync_options):
     """

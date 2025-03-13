@@ -2,7 +2,7 @@
 
 **Author:** Mike Gazzaruso  
 **License:** GNU/GPL v3  
-**Version:** 0.5.2
+**Version:** 0.6.0
 
 ## Overview
 This project is a video translation pipeline that extracts speech from a video, transcribes it, translates it, and generates a voice-cloned speech using AI. The generated speech is then overlaid on the original video, replacing the original voice while preserving background sounds. It utilizes:
@@ -13,6 +13,7 @@ This project is a video translation pipeline that extracts speech from a video, 
 - **Demucs** for separating vocals and background audio
 - **FFmpeg** for audio and video processing
 - **Cache System** for reusing previously generated voice latents and models
+- **Apple Silicon Support** for hardware acceleration on M1/M2/M3 Macs
 
 **Note:** Lip-sync support is planned for future releases.
 
@@ -37,6 +38,7 @@ This project is a video translation pipeline that extracts speech from a video, 
 - **Live Progress Updates**: Detailed text display of process phases in real-time
 - **Enhanced Error Handling**: Robust handling of file permissions and language codes
 - **Broad format support**: Works with various video formats including iPhone videos (MOV), MP4, and others
+- **Apple Silicon Acceleration**: Hardware acceleration for Tortoise-TTS on M1/M2/M3 Macs
 
 ---
 
@@ -45,7 +47,7 @@ This project is a video translation pipeline that extracts speech from a video, 
 Ensure you have the following installed:
 - Python 3.8+
 - FFmpeg (available via `apt`, `brew`, or `choco` depending on your OS)
-- CUDA (if running on GPU, optional but recommended)
+- CUDA (if running on NVIDIA GPU, optional but recommended)
 
 ### Install dependencies
 Create a virtual environment and install required dependencies:
@@ -55,8 +57,36 @@ source video_translate_env/bin/activate  # On Windows use: video_translate_env\S
 pip install -r requirements.txt
 ```
 
-### Streamlit GUI (New!)
-The project now includes a Streamlit-based graphical user interface for easier use:
+### macOS with Apple Silicon (M1/M2/M3)
+For macOS with Apple Silicon, we provide a specialized setup script that configures the environment for optimal performance:
+
+```bash
+# Make the script executable
+chmod +x setup_mac.sh
+
+# Run the setup script
+./setup_mac.sh
+```
+
+This script will:
+1. Check if you're running on macOS
+2. Generate a platform-specific requirements.txt file
+3. Create and activate a virtual environment
+4. Install the correct version of PyTorch with MPS support
+5. Install all other dependencies
+6. Verify the installation
+
+To verify MPS acceleration is working correctly:
+```bash
+# Run the MPS check script
+python check_mps.py
+
+# Test Tortoise-TTS with MPS
+python test_tortoise_mps.py
+```
+
+### Streamlit GUI
+The project includes a Streamlit-based graphical user interface for easier use:
 
 ```bash
 # Run the Streamlit interface
@@ -67,7 +97,28 @@ streamlit run app.py
 run_streamlit.bat     # On Windows
 ```
 
-For more details on the Streamlit interface, see [README_STREAMLIT.md](README_STREAMLIT.md).
+#### Using the Streamlit Interface
+
+The interface is divided into two main sections:
+
+##### Sidebar
+
+In the sidebar, you can configure:
+
+- **Languages**: Select the source and target language for translation.
+- **Cache options**: Enable/disable cache usage and clear existing cache.
+- **Advanced options**: Configure advanced parameters for audio-video synchronization.
+- **Temporary files**: Choose whether to keep temporary files after processing.
+
+##### Main Panel
+
+The main panel allows you to:
+
+1. **Upload a video file**: Select the video you want to translate.
+2. **Upload voice samples**: Provide audio samples for voice cloning.
+3. **Start the translation process**: Begin the translation with the configured settings.
+4. **Monitor progress**: View real-time updates of the translation process.
+5. **Download the result**: Get the translated video when processing is complete.
 
 ---
 
@@ -142,6 +193,10 @@ video_translator/
 ├── audio_processing.py     # Audio processing module
 ├── sync_evaluation.py      # Synchronization evaluation module
 ├── utils.py                # Utility functions
+├── device_utils.py         # Device selection utilities
+├── tortoise_patch.py       # MPS compatibility patches
+├── generate_requirements.py # Platform-specific requirements
+├── setup_mac.sh            # macOS setup script
 └── autodub.ipynb           # Jupyter notebook for Google Colab
 ```
 
@@ -172,6 +227,50 @@ To clear only the voice cache:
 ```bash
 python autodub.py --clear-voice-cache
 ```
+
+---
+
+## Apple Silicon Acceleration
+
+### Performance Expectations
+
+MPS acceleration on Apple Silicon can provide significant speedups compared to CPU, but it may not be as fast as NVIDIA CUDA acceleration. Typical speedups range from 2x to 5x depending on the model and operations.
+
+For Tortoise-TTS specifically, you can expect:
+- Faster inference times
+- Lower CPU usage
+- Potentially higher memory usage
+
+### Troubleshooting MPS Acceleration
+
+If you're experiencing issues with MPS acceleration:
+
+1. **Check PyTorch version**:
+   MPS support requires PyTorch 1.12 or newer. Check your version with:
+   ```python
+   import torch
+   print(torch.__version__)
+   ```
+
+2. **Verify MPS availability**:
+   ```python
+   import torch
+   print(torch.backends.mps.is_available())
+   print(torch.backends.mps.is_built())
+   ```
+   Both should return `True`.
+
+3. **Reinstall PyTorch**:
+   If MPS is not available, try reinstalling PyTorch:
+   ```bash
+   pip uninstall -y torch torchaudio
+   pip install --upgrade torch torchaudio
+   ```
+
+4. **Known limitations**:
+   - Not all PyTorch operations are supported by MPS yet
+   - Some operations might be slower on MPS than on CPU
+   - For very large models, you might encounter memory limitations
 
 ---
 
