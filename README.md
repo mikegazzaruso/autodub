@@ -14,6 +14,7 @@ This project is a video translation pipeline that extracts speech from a video, 
 - **FFmpeg** for audio and video processing
 - **Cache System** for reusing previously generated voice latents and models
 - **Apple Silicon Support** for hardware acceleration on M1/M2/M3 Macs
+- **CUDA Support** for hardware acceleration on Windows and Linux with NVIDIA GPUs
 
 **Note:** Lip-sync support is planned for future releases.
 
@@ -38,7 +39,10 @@ This project is a video translation pipeline that extracts speech from a video, 
 - **Live Progress Updates**: Detailed text display of process phases in real-time
 - **Enhanced Error Handling**: Robust handling of file permissions and language codes
 - **Broad format support**: Works with various video formats including iPhone videos (MOV), MP4, and others
-- **Apple Silicon Acceleration**: Hardware acceleration for Tortoise-TTS on M1/M2/M3 Macs
+- **Hardware Acceleration**:
+  - Apple Silicon (MPS) acceleration on M1/M2/M3 Macs
+  - CUDA acceleration on Windows and Linux with NVIDIA GPUs
+  - CPU fallback on systems without GPU acceleration (significantly slower, not recommended for production use)
 
 ---
 
@@ -47,7 +51,7 @@ This project is a video translation pipeline that extracts speech from a video, 
 Ensure you have the following installed:
 - Python 3.8+
 - FFmpeg (available via `apt`, `brew`, or `choco` depending on your OS)
-- CUDA (if running on NVIDIA GPU, optional but recommended)
+- CUDA drivers (if running on NVIDIA GPU, optional but recommended)
 
 ### Install dependencies
 Create a virtual environment and install required dependencies:
@@ -57,9 +61,25 @@ source video_translate_env/bin/activate  # On Windows use: video_translate_env\S
 pip install -r requirements.txt
 ```
 
-### macOS with Apple Silicon (M1/M2/M3)
-For macOS with Apple Silicon, we provide a specialized setup script that configures the environment for optimal performance:
+### Platform-specific Setup Scripts
+We provide specialized setup scripts for different platforms that configure the environment for optimal performance:
 
+#### Windows with NVIDIA GPU
+```bash
+# Run the Windows setup script
+setup_windows.bat
+```
+
+#### Linux with NVIDIA GPU
+```bash
+# Make the script executable
+chmod +x setup_linux.sh
+
+# Run the setup script
+./setup_linux.sh
+```
+
+#### macOS with Apple Silicon (M1/M2/M3)
 ```bash
 # Make the script executable
 chmod +x setup_mac.sh
@@ -68,15 +88,41 @@ chmod +x setup_mac.sh
 ./setup_mac.sh
 ```
 
-This script will:
-1. Check if you're running on macOS
-2. Generate a platform-specific requirements.txt file
-3. Create and activate a virtual environment
-4. Install the correct version of PyTorch with MPS support
-5. Install all other dependencies
-6. Verify the installation
+These scripts will:
+1. Check your platform and hardware
+2. Create and activate a virtual environment
+3. Install the correct version of PyTorch with appropriate acceleration (CUDA or MPS)
+4. Install all other dependencies
+5. Verify the installation
 
-To verify MPS acceleration is working correctly:
+### Fixing CUDA Detection Issues
+If you have an NVIDIA GPU but CUDA is not being detected, you can use our fix scripts:
+
+#### Windows
+```bash
+# Run the CUDA fix script
+fix_cuda.bat
+```
+
+#### Linux
+```bash
+# Make the script executable
+chmod +x fix_cuda.sh
+
+# Run the CUDA fix script
+./fix_cuda.sh
+```
+
+### Verifying Hardware Acceleration
+To verify hardware acceleration is working correctly:
+
+#### For CUDA (Windows/Linux)
+```bash
+# Run the CUDA test script
+python test_cuda.py
+```
+
+#### For MPS (macOS)
 ```bash
 # Run the MPS check script
 python check_mps.py
@@ -84,6 +130,17 @@ python check_mps.py
 # Test Tortoise-TTS with MPS
 python test_tortoise_mps.py
 ```
+
+### Performance Considerations
+**Important Note**: This application requires hardware acceleration for reasonable performance:
+
+- **With GPU Acceleration** (CUDA or MPS): Voice synthesis typically takes 10-30 seconds per segment.
+- **Without GPU Acceleration** (CPU only): Voice synthesis can take 5-10 minutes per segment, making the application impractically slow for most use cases.
+
+If no accelerated hardware is detected, the application will automatically fall back to CPU processing, but this is not recommended for production use. For acceptable performance, we strongly recommend:
+
+- An NVIDIA GPU with CUDA support (Windows/Linux)
+- Apple Silicon Mac with MPS support (macOS)
 
 ### Streamlit GUI
 The project includes a Streamlit-based graphical user interface for easier use:

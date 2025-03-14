@@ -9,12 +9,17 @@ New features:
 - Implemented MPS (Metal Performance Shaders) backend for PyTorch on macOS
 - Added automatic platform detection for optimal device selection (CUDA, MPS, or CPU)
 - Created macOS-specific setup script for easy installation
+- Enhanced CUDA detection and support for Windows and Linux with NVIDIA GPUs
+- Added platform-specific setup scripts for Windows and Linux
 
 Technical improvements:
 - Added compatibility patches for Tortoise-TTS on MPS
 - Implemented safe tensor operations with CPU fallback for unsupported MPS operations
 - Added platform-specific requirements generation
 - Enhanced performance on Apple Silicon Macs with 2-5x speedup compared to CPU
+- Improved CUDA detection logic to properly identify and utilize NVIDIA GPUs on Windows and Linux
+- Added CUDA fix scripts to ensure proper installation of CUDA-enabled PyTorch
+- Implemented robust hardware detection for optimal performance across all platforms
 
 0.5.2 (March 4, 2025)
 
