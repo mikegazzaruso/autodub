@@ -9,14 +9,25 @@ def get_optimal_device():
     Returns:
         torch.device: The optimal device (cuda, mps, or cpu)
     """
-    # Check if we're on macOS (Darwin)
-    is_mac = platform.system() == "Darwin"
-    print(f"Running on macOS: {is_mac}")
+    # Check platform
+    system = platform.system()
+    is_mac = system == "Darwin"
+    is_windows = system == "Windows"
+    is_linux = system == "Linux"
+    
+    print(f"Platform: {system} {platform.release()}")
     print(f"Machine architecture: {platform.machine()}")
     
     # Check for CUDA (NVIDIA GPU)
     has_cuda = torch.cuda.is_available()
-    print(f"CUDA available: {has_cuda}")
+    if has_cuda:
+        cuda_device_count = torch.cuda.device_count()
+        cuda_device_name = torch.cuda.get_device_name(0) if cuda_device_count > 0 else "Unknown"
+        print(f"CUDA available: {has_cuda}")
+        print(f"CUDA devices: {cuda_device_count}")
+        print(f"CUDA device name: {cuda_device_name}")
+    else:
+        print(f"CUDA available: {has_cuda}")
     
     # Check for MPS (Apple Silicon)
     has_mps = False
@@ -32,12 +43,15 @@ def get_optimal_device():
             print("PyTorch was not built with MPS support")
     
     # Determine the best device
-    if has_cuda:
+    if has_cuda and (is_windows or is_linux):
         print("CUDA (NVIDIA GPU) is available. Using GPU acceleration.")
         return torch.device('cuda')
     elif has_mps and is_mac:
         print("MPS (Apple Silicon) is available. Using Metal acceleration.")
         return torch.device('mps')
+    elif has_cuda:  # Fallback for any other platform with CUDA
+        print("CUDA (NVIDIA GPU) is available. Using GPU acceleration.")
+        return torch.device('cuda')
     else:
         print("No GPU acceleration available. Using CPU.")
         return torch.device('cpu')
