@@ -88,7 +88,7 @@ def prepare_voice_samples(tts, voice_samples_dir, voice_samples=None, conditioni
         print(traceback.format_exc())
         return None, None
 
-def clone_voice(tts, text, voice_samples, conditioning_latents, segment_idx=0, use_cache=True):
+def clone_voice(tts, text, voice_samples, conditioning_latents, segment_idx=0, use_cache=True, default_voice_seed=None):
     """
     Generate audio with cloned voice.
     
@@ -99,6 +99,7 @@ def clone_voice(tts, text, voice_samples, conditioning_latents, segment_idx=0, u
         conditioning_latents: Conditioning latents for voice cloning
         segment_idx: Index of the current segment
         use_cache: Whether to use cached conditioning latents
+        default_voice_seed: Seed for default voice when no voice samples are provided
         
     Returns:
         Generated audio as numpy array
@@ -119,7 +120,12 @@ def clone_voice(tts, text, voice_samples, conditioning_latents, segment_idx=0, u
                                      voice_samples=voice_samples,
                                      preset="fast")
         else:
-            print("Using default voice...")
+            print(f"Using default voice with seed {default_voice_seed}...")
+            # Set random seed for consistent voice
+            if default_voice_seed is not None:
+                torch.manual_seed(default_voice_seed)
+                np.random.seed(default_voice_seed)
+            # Use default voice without passing seed parameter
             gen = tts.tts(text, voice_samples=None)
         
         # Get the first result and safely move to CPU
@@ -166,7 +172,7 @@ def calculate_adaptive_speed_factor(current_duration, target_duration, sync_opti
     else:
         return 1.0  # No adjustment needed
 
-def generate_audio_segments(tts, aligned_segments, temp_dir, voice_samples, conditioning_latents, sync_options=None, use_cache=True):
+def generate_audio_segments(tts, aligned_segments, temp_dir, voice_samples, conditioning_latents, sync_options=None, use_cache=True, use_female_voice=False):
     """
     Generate audio segments for each translated segment.
     
@@ -178,6 +184,7 @@ def generate_audio_segments(tts, aligned_segments, temp_dir, voice_samples, cond
         conditioning_latents: Conditioning latents for voice cloning
         sync_options: Dictionary with synchronization options
         use_cache: Whether to use cached conditioning latents
+        use_female_voice: Whether to use a female voice when no voice samples are provided
         
     Returns:
         List of audio segment information
@@ -193,6 +200,14 @@ def generate_audio_segments(tts, aligned_segments, temp_dir, voice_samples, cond
             "adaptive_timing": True
         }
     
+    # Generate a consistent default voice seed if no voice samples are provided
+    default_voice_seed = None
+    if voice_samples is None or len(voice_samples) == 0:
+        # Use a consistent seed for all segments to ensure the same voice is used
+        default_voice_seed = 42 if not use_female_voice else 24
+        print(f"Using consistent default {'female' if use_female_voice else 'male'} voice (seed: {default_voice_seed})...")
+    
+    # Process each segment
     for i, segment in enumerate(aligned_segments):
         text = segment["text"]
         start_time = segment["start"]
@@ -200,8 +215,31 @@ def generate_audio_segments(tts, aligned_segments, temp_dir, voice_samples, cond
         duration = end_time - start_time
         is_split = segment.get("is_split", False)
         
-        # Generate audio with cloned voice
-        audio = clone_voice(tts, text, voice_samples, conditioning_latents, i, use_cache)
+        # Skip empty segments
+        if not text.strip():
+            continue
+        
+        print(f"Processing segment {i+1}/{len(aligned_segments)}: {text[:50]}...")
+        
+        # Generate audio for this segment
+        if voice_samples is not None and len(voice_samples) > 0:
+            # Use voice cloning
+            audio = clone_voice(tts, text, voice_samples, conditioning_latents, i, use_cache, default_voice_seed)
+        else:
+            # Use default voice with consistent seed
+            print(f"Using default {'female' if use_female_voice else 'male'} voice for segment {i+1}...")
+            # Set random seed for consistent voice
+            if default_voice_seed is not None:
+                torch.manual_seed(default_voice_seed)
+                np.random.seed(default_voice_seed)
+            # Generate without passing seed parameter
+            audio = tts.tts(text, voice_samples=None)
+            # Convert to numpy array
+            audio = audio[0].cpu().numpy()
+        
+        if audio is None:
+            print(f"Failed to generate audio for segment {i+1}")
+            continue
         
         # Save audio temporarily using numpy.save which doesn't rely on audio format
         temp_audio_path = os.path.join(temp_dir, f"segment_{i}.npy")
@@ -235,10 +273,8 @@ def generate_audio_segments(tts, aligned_segments, temp_dir, voice_samples, cond
             # Load audio to adjust speed
             audio_segment = AudioSegment.from_file(wav_path)
             
-            # Calculate current duration in seconds
-            current_duration = len(audio_segment) / 1000.0  # duration in seconds
-            
             # Calculate adaptive speed factor for better synchronization
+            current_duration = len(audio_segment) / 1000.0  # duration in seconds
             speed_factor = calculate_adaptive_speed_factor(current_duration, duration, sync_options)
             
             # For split segments, we might want to be more aggressive with timing
@@ -246,6 +282,8 @@ def generate_audio_segments(tts, aligned_segments, temp_dir, voice_samples, cond
                 # Adjust speed factor more aggressively for split segments
                 if speed_factor > 1.0:
                     speed_factor = min(speed_factor * 1.1, sync_options.get("max_speed_factor", 1.8))
+                elif speed_factor < 1.0:
+                    speed_factor = max(speed_factor * 0.9, sync_options.get("min_speed_factor", 0.7))
             
             # Log the adjustment being made
             print(f"Segment {i}: Duration {current_duration:.2f}s -> Target {duration:.2f}s, Speed factor: {speed_factor:.2f}")
@@ -310,5 +348,5 @@ def generate_audio_segments(tts, aligned_segments, temp_dir, voice_samples, cond
         except Exception as e:
             print(f"Error generating audio segment {i}: {e}")
             print(traceback.format_exc())
-        
+    
     return audio_segments 

@@ -10,7 +10,7 @@ import uuid
 from video_translator import VideoTranslator
 from utils import get_sync_defaults, get_language_code_map, clear_cache, setup_cache_directory
 
-# Configurazione della pagina
+# Page configuration
 st.set_page_config(
     page_title="AutoDub - AI Powered Dubbing Tool",
     page_icon="🎬",
@@ -18,7 +18,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Inizializza le variabili di sessione se non esistono
+# Initialize session variables if they don't exist
 if 'process_running' not in st.session_state:
     st.session_state['process_running'] = False
 if 'process_thread' not in st.session_state:
@@ -40,22 +40,22 @@ if 'start_clicked' not in st.session_state:
 if 'process_interrupted' not in st.session_state:
     st.session_state['process_interrupted'] = False
 if 'stop_file_path' not in st.session_state:
-    # Crea un file temporaneo per la comunicazione tra thread
+    # Create a temporary file for thread communication
     stop_file = tempfile.NamedTemporaryFile(delete=False, suffix='.stop')
     stop_file.close()
     st.session_state['stop_file_path'] = stop_file.name
-    # Assicurati che il file non esista all'inizio
+    # Make sure the file doesn't exist at the start
     if os.path.exists(stop_file.name):
         os.unlink(stop_file.name)
 
-# Carica il CSS personalizzato
+# Load custom CSS
 def load_css():
     css_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".streamlit", "static", "style.css")
     if os.path.exists(css_file):
         with open(css_file, "r") as f:
             st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
     
-    # Aggiungi CSS per il popup informativo
+    # Add CSS for the info tooltip
     st.markdown("""
     <style>
     .info-tooltip {
@@ -121,9 +121,9 @@ def load_css():
 
 load_css()
 
-# Funzione per ottenere le lingue disponibili
+# Function to get available languages
 def get_available_languages():
-    # Mappa i nomi delle lingue ai codici
+    # Map language names to codes
     language_names = {
         "it": "Italian",
         "en": "English",
@@ -138,20 +138,20 @@ def get_available_languages():
         "hi": "Hindi"
     }
     
-    # Crea un dizionario inverso: nome lingua -> codice
+    # Create an inverse dictionary: language name -> code
     return {name: code for code, name in language_names.items()}
 
-# Funzione per salvare il file caricato
+# Function to save the uploaded file
 def save_uploaded_file(uploaded_file):
     try:
         with tempfile.NamedTemporaryFile(delete=False, suffix=f".{uploaded_file.name.split('.')[-1]}") as tmp_file:
             tmp_file.write(uploaded_file.getvalue())
             return tmp_file.name
     except Exception as e:
-        st.error(f"Errore nel salvataggio del file: {e}")
+        st.error(f"Error saving file: {e}")
         return None
 
-# Funzione per salvare i file audio di esempio
+# Function to save voice sample files
 def save_voice_samples(uploaded_files):
     try:
         temp_dir = tempfile.mkdtemp()
@@ -161,10 +161,10 @@ def save_voice_samples(uploaded_files):
                 f.write(uploaded_file.getvalue())
         return temp_dir
     except Exception as e:
-        st.error(f"Errore nel salvataggio dei campioni vocali: {e}")
+        st.error(f"Error saving voice samples: {e}")
         return None
 
-# Funzione per reindirizzare stdout e stderr alla coda di log
+# Function to redirect stdout and stderr to the log queue
 class LogRedirector:
     def __init__(self, queue):
         self.queue = queue
@@ -178,110 +178,110 @@ class LogRedirector:
     def flush(self):
         self.terminal.flush()
 
-# Funzione per verificare se il processo deve essere interrotto
+# Function to check if the process should be stopped
 def check_stop_file(stop_file_path):
     return os.path.exists(stop_file_path)
 
-# Funzione per elaborare il video in un thread separato
+# Function to process the video in a separate thread
 def process_video_thread(translator, video_path, output_path, message_queue, stop_file_path):
-    # Reindirizza stdout e stderr alla coda di messaggi
+    # Redirect stdout and stderr to the message queue
     original_stdout = sys.stdout
     original_stderr = sys.stderr
     sys.stdout = LogRedirector(message_queue)
     sys.stderr = LogRedirector(message_queue)
     
     try:
-        # Funzione di callback per verificare se il processo deve essere interrotto
+        # Callback function to check if the process should be stopped
         def check_stop():
             is_stopped = check_stop_file(stop_file_path)
             if is_stopped:
-                message_queue.put(("status", ("Interruzione in corso...", 0.5)))
-                message_queue.put(("log", "Processo interrotto dall'utente. Attendere il completamento dell'operazione corrente..."))
+                message_queue.put(("status", ("Interrupting...", 0.5)))
+                message_queue.put(("log", "Process interrupted by user. Waiting for current operation to complete..."))
             return is_stopped
         
-        # Imposta la funzione di callback nel traduttore
+        # Set the callback function in the translator
         translator.stop_callback = check_stop
         
-        # Aggiorna lo stato
-        message_queue.put(("status", ("Inizializzazione del traduttore...", 0.05)))
+        # Update status
+        message_queue.put(("status", ("Initializing translator...", 0.05)))
         
-        # Elabora il video
+        # Process the video
         translator.process_video(video_path, output_path)
         
-        # Controlla se il processo è stato interrotto
+        # Check if the process was interrupted
         if check_stop_file(stop_file_path):
             message_queue.put(("interrupted", None))
-            message_queue.put(("status", ("Processo interrotto dall'utente", 1.0)))
+            message_queue.put(("status", ("Process interrupted by user", 1.0)))
         else:
-            # Aggiorna lo stato finale
-            message_queue.put(("status", ("Traduzione completata!", 1.0)))
+            # Update final status
+            message_queue.put(("status", ("Translation completed!", 1.0)))
             message_queue.put(("completed", output_path))
     except Exception as e:
-        message_queue.put(("status", (f"Errore: {str(e)}", 1.0)))
-        message_queue.put(("log", f"ERRORE: {str(e)}"))
+        message_queue.put(("status", (f"Error: {str(e)}", 1.0)))
+        message_queue.put(("log", f"ERROR: {str(e)}"))
     finally:
-        # Ripristina stdout e stderr
+        # Restore stdout and stderr
         sys.stdout = original_stdout
         sys.stderr = original_stderr
-        # Segnala che il processo è terminato
+        # Signal that the process has ended
         message_queue.put(("finished", None))
-        # Rimuovi il file di stop se esiste
+        # Remove the stop file if it exists
         if os.path.exists(stop_file_path):
             try:
                 os.unlink(stop_file_path)
             except:
                 pass
 
-# Callback per il pulsante di avvio
+# Callback for the start button
 def on_start_click():
     st.session_state['start_clicked'] = True
 
-# Callback per il pulsante di stop
+# Callback for the stop button
 def on_stop_click():
     if 'stop_file_path' in st.session_state:
-        # Crea il file di stop
+        # Create the stop file
         with open(st.session_state['stop_file_path'], 'w') as f:
             f.write('stop')
         st.session_state['stop_process'] = True
 
-# Funzione per avviare il processo di traduzione
-def start_translation_process(uploaded_video, uploaded_voice_samples, source_lang, target_lang, use_cache, sync_options, keep_temp):
-    # Resetta lo stato
+# Function to start the translation process
+def start_translation_process(uploaded_video, uploaded_voice_samples, source_lang, target_lang, use_cache, sync_options, keep_temp, use_female_voice=False):
+    # Reset state
     st.session_state['process_running'] = True
     st.session_state['stop_process'] = False
     st.session_state['process_interrupted'] = False
-    st.session_state['status_message'] = "Inizializzazione..."
+    st.session_state['status_message'] = "Initializing..."
     st.session_state['progress_value'] = 0
     st.session_state['process_completed'] = False
     st.session_state['output_video_path'] = None
     
-    # Assicurati che il file di stop non esista
+    # Make sure the stop file doesn't exist
     if os.path.exists(st.session_state['stop_file_path']):
         try:
             os.unlink(st.session_state['stop_file_path'])
         except:
             pass
     
-    # Salva il video caricato
+    # Save the uploaded video
     video_path = save_uploaded_file(uploaded_video)
     
     if video_path:
-        # Salva i campioni vocali se presenti
+        # Save voice samples if present
         voice_samples_dir = None
         if uploaded_voice_samples:
             voice_samples_dir = save_voice_samples(uploaded_voice_samples)
         
-        # Crea il percorso di output
+        # Create the output path
         output_filename = f"translated_{os.path.basename(video_path)}"
         script_dir = os.path.dirname(os.path.abspath(__file__))
         output_dir = os.path.join(script_dir, "conversions")
         os.makedirs(output_dir, exist_ok=True)
         output_path = os.path.join(output_dir, output_filename)
         
-        # Crea una coda per la comunicazione tra thread
+        # Create a queue for thread communication
         message_queue = queue.Queue()
         
-        # Crea il traduttore video
+        # Create the video translator
         languages = get_available_languages()
         translator = VideoTranslator(
             source_lang=languages[source_lang],
@@ -290,10 +290,11 @@ def start_translation_process(uploaded_video, uploaded_voice_samples, source_lan
             input_video_path=video_path,
             use_cache=use_cache,
             sync_options=sync_options,
-            keep_temp=keep_temp
+            keep_temp=keep_temp,
+            use_female_voice=use_female_voice
         )
         
-        # Avvia il thread per elaborare il video
+        # Start the thread to process the video
         process_thread = threading.Thread(
             target=process_video_thread,
             args=(translator, video_path, output_path, message_queue, st.session_state['stop_file_path'])
@@ -301,92 +302,100 @@ def start_translation_process(uploaded_video, uploaded_voice_samples, source_lan
         process_thread.daemon = True
         process_thread.start()
         
-        # Memorizza la coda e il flag nella sessione
+        # Store the queue and flag in the session
         st.session_state['message_queue'] = message_queue
         st.session_state['video_path'] = video_path
         st.session_state['voice_samples_dir'] = voice_samples_dir
         st.session_state['process_thread'] = process_thread
 
-# Titolo dell'applicazione
+# Application title
 st.markdown('<h1 class="main-title">🎬 AutoDub - AI Powered Dubbing Tool</h1>', unsafe_allow_html=True)
 st.markdown('<p class="subtitle">© 2025 by Mike Gazzaruso | <a href="https://github.com/mikegazzaruso/autodub" target="_blank">GitHub Repository</a></p>', unsafe_allow_html=True)
 
-# Aggiungi 5 righe descrittive basate sul README
+# Add 5 descriptive lines based on the README
 st.markdown("""
-1. **Carica un video** da tradurre e opzionalmente dei campioni audio della voce da clonare (WAV, 5-10 secondi).
-2. **Seleziona le lingue** di origine e destinazione dalla barra laterale.
-3. **Configura le opzioni avanzate** se necessario (velocità, pause, sincronizzazione).
-4. **Avvia la traduzione** e monitora il progresso attraverso la barra di stato.
-5. Al termine, **scarica il video tradotto** con la voce clonata e l'audio di sottofondo preservato.
+1. **Upload a video** to translate and optionally voice samples to clone (WAV, 5-10 seconds).
+2. **Select languages** for source and target from the sidebar.
+3. **Configure advanced options** if needed (speed, pauses, synchronization).
+4. **Start the translation** and monitor progress through the status bar.
+5. When finished, **download the translated video** with the cloned voice and preserved background audio.
 """)
 
-# Sidebar per le impostazioni
+# Sidebar for settings
 with st.sidebar:
-    st.header("Impostazioni")
+    st.header("Settings")
     
-    # Lingue
+    # Languages
     languages = get_available_languages()
-    source_lang = st.selectbox("Lingua di origine", options=list(languages.keys()), index=list(languages.keys()).index("Italian") if "Italian" in languages else 0)
-    target_lang = st.selectbox("Lingua di destinazione", options=list(languages.keys()), index=list(languages.keys()).index("English") if "English" in languages else 0)
+    source_lang = st.selectbox("Source Language", options=list(languages.keys()), index=list(languages.keys()).index("Italian") if "Italian" in languages else 0)
+    target_lang = st.selectbox("Target Language", options=list(languages.keys()), index=list(languages.keys()).index("English") if "English" in languages else 0)
     
-    # Opzioni di cache
-    st.subheader("Opzioni di cache")
-    use_cache = st.checkbox("Usa cache", value=True, help="Utilizza i modelli e le voci memorizzati nella cache")
+    # Cache options
+    st.subheader("Cache Options")
+    use_cache = st.checkbox("Use Cache", value=True, help="Use cached models and voices")
     
     cache_col1, cache_col2 = st.columns(2)
     with cache_col1:
-        clear_all_cache = st.button("Cancella tutta la cache")
+        clear_all_cache = st.button("Clear All Cache")
     with cache_col2:
-        clear_voice_cache = st.button("Cancella cache voci")
+        clear_voice_cache = st.button("Clear Voice Cache")
     
     if clear_all_cache:
         cache_dir = setup_cache_directory()
         clear_cache(cache_dir, voice_only=False)
-        st.success("Cache completamente cancellata!")
+        st.success("Cache completely cleared!")
     
     if clear_voice_cache:
         cache_dir = setup_cache_directory()
         clear_cache(cache_dir, voice_only=True)
-        st.success("Cache delle voci cancellata!")
+        st.success("Voice cache cleared!")
     
-    # Opzioni avanzate
-    st.subheader("Opzioni avanzate")
-    show_advanced = st.checkbox("Mostra opzioni avanzate", value=False)
+    # Advanced options
+    st.subheader("Advanced Options")
+    show_advanced = st.checkbox("Show Advanced Options", value=False)
     
     sync_options = get_sync_defaults()
     
     if show_advanced:
-        st.markdown("#### Opzioni di sincronizzazione")
-        sync_options["max_speed_factor"] = st.slider("Fattore di velocità massima", min_value=1.0, max_value=2.0, value=float(sync_options["max_speed_factor"]), step=0.1)
-        sync_options["min_speed_factor"] = st.slider("Fattore di velocità minima", min_value=0.5, max_value=1.0, value=float(sync_options["min_speed_factor"]), step=0.1)
-        sync_options["pause_threshold"] = st.slider("Soglia di pausa (dB)", min_value=-60.0, max_value=-20.0, value=float(sync_options["pause_threshold"]), step=1.0)
-        sync_options["min_pause_duration"] = st.slider("Durata minima pausa (ms)", min_value=50, max_value=500, value=int(sync_options["min_pause_duration"]), step=10)
-        sync_options["adaptive_timing"] = st.checkbox("Timing adattivo", value=bool(sync_options["adaptive_timing"]))
-        sync_options["preserve_sentence_breaks"] = st.checkbox("Preserva interruzioni di frase", value=bool(sync_options["preserve_sentence_breaks"]))
+        st.markdown("#### Synchronization Options")
+        sync_options["max_speed_factor"] = st.slider("Maximum Speed Factor", min_value=1.0, max_value=2.0, value=float(sync_options["max_speed_factor"]), step=0.1)
+        sync_options["min_speed_factor"] = st.slider("Minimum Speed Factor", min_value=0.5, max_value=1.0, value=float(sync_options["min_speed_factor"]), step=0.1)
+        sync_options["pause_threshold"] = st.slider("Pause Threshold (dB)", min_value=-60.0, max_value=-20.0, value=float(sync_options["pause_threshold"]), step=1.0)
+        sync_options["min_pause_duration"] = st.slider("Minimum Pause Duration (ms)", min_value=50, max_value=500, value=int(sync_options["min_pause_duration"]), step=10)
+        sync_options["adaptive_timing"] = st.checkbox("Adaptive Timing", value=bool(sync_options["adaptive_timing"]))
+        sync_options["preserve_sentence_breaks"] = st.checkbox("Preserve Sentence Breaks", value=bool(sync_options["preserve_sentence_breaks"]))
     
-    # Opzione per mantenere i file temporanei
-    keep_temp = st.checkbox("Mantieni file temporanei", value=False)
+    # Option to keep temporary files
+    keep_temp = st.checkbox("Keep Temporary Files", value=False)
 
-# Caricamento del video
-st.markdown('<h2 class="section-header">Carica il tuo video</h2>', unsafe_allow_html=True)
-uploaded_video = st.file_uploader("Seleziona un file video", type=["mp4", "avi", "mov", "mkv"])
+# Video upload
+st.markdown('<h2 class="section-header">Upload Your Video</h2>', unsafe_allow_html=True)
+uploaded_video = st.file_uploader("Select a video file", type=["mp4", "avi", "mov", "mkv"])
 
-# Caricamento dei campioni vocali
-st.markdown('<h2 class="section-header">Campioni vocali (opzionale)</h2>', unsafe_allow_html=True)
-st.markdown("Carica file audio della voce che vuoi clonare (formato consigliato: WAV, 5-10 secondi per file)")
-uploaded_voice_samples = st.file_uploader("Seleziona file audio", type=["wav", "mp3"], accept_multiple_files=True)
+# Voice samples upload
+st.markdown('<h2 class="section-header">Voice Samples (optional)</h2>', unsafe_allow_html=True)
+st.markdown("Upload audio files of the voice you want to clone (recommended format: WAV, 5-10 seconds per file)")
+uploaded_voice_samples = st.file_uploader("Select audio files", type=["wav", "mp3"], accept_multiple_files=True)
 
-# Pulsante per avviare/interrompere la traduzione
-st.markdown('<h2 class="section-header">Controlli</h2>', unsafe_allow_html=True)
+# Option to select default voice gender (only if no voice samples are provided)
+if not uploaded_voice_samples:
+    st.markdown('<h3 class="section-header">Default Voice</h3>', unsafe_allow_html=True)
+    st.markdown("If you don't provide voice samples, a default voice will be used for all segments.")
+    use_female_voice = st.checkbox("Use Female Voice", value=False, help="If selected, a female default voice will be used. Otherwise, a male voice will be used.")
+else:
+    use_female_voice = False
 
-# Crea due colonne per i controlli e lo stato
+# Button to start/stop translation
+st.markdown('<h2 class="section-header">Controls</h2>', unsafe_allow_html=True)
+
+# Create two columns for controls and status
 control_col, status_col = st.columns([1, 3])
 
-# Gestione del pulsante e dello stato
+# Handle button and status
 with control_col:
-    # Se il pulsante di avvio è stato cliccato, imposta immediatamente process_running a True
+    # If the start button was clicked, immediately set process_running to True
     if st.session_state.get('start_clicked', False) and not st.session_state.get('process_running', False):
-        # Avvia il processo di traduzione
+        # Start the translation process
         start_translation_process(
             uploaded_video, 
             uploaded_voice_samples, 
@@ -394,15 +403,16 @@ with control_col:
             target_lang, 
             use_cache, 
             sync_options, 
-            keep_temp
+            keep_temp,
+            use_female_voice
         )
-        # Reimposta il flag
+        # Reset the flag
         st.session_state['start_clicked'] = False
     
-    # Mostra il pulsante appropriato in base allo stato
+    # Show the appropriate button based on the state
     if not st.session_state['process_running']:
         st.button(
-            "Avvia traduzione", 
+            "Start Translation", 
             type="primary", 
             disabled=uploaded_video is None, 
             key=f"start_button_{st.session_state['session_id']}",
@@ -410,32 +420,32 @@ with control_col:
         )
     else:
         st.button(
-            "Stoppa Traduzione", 
+            "Stop Translation", 
             type="secondary", 
             key=f"stop_button_{st.session_state['session_id']}",
             on_click=on_stop_click
         )
         if st.session_state['stop_process']:
-            st.warning("Interruzione del processo in corso... Attendere il completamento dell'operazione corrente.")
+            st.warning("Stopping the process... Please wait for the current operation to complete.")
 
 with status_col:
-    # Barra di progresso e stato dettagliato
+    # Progress bar and detailed status
     progress_bar = st.progress(st.session_state['progress_value'])
     status_container = st.container()
     with status_container:
         status_text = st.empty()
-        status_text.markdown(f"**Stato:** {st.session_state['status_message']}")
+        status_text.markdown(f"**Status:** {st.session_state['status_message']}")
 
-# Area per il video tradotto
-st.markdown('<h2 class="section-header">Video tradotto</h2>', unsafe_allow_html=True)
+# Area for the translated video
+st.markdown('<h2 class="section-header">Translated Video</h2>', unsafe_allow_html=True)
 output_video_container = st.container()
 with output_video_container:
     output_video_area = st.empty()
     download_button_area = st.empty()
 
-# Se il processo è in esecuzione, controlla i messaggi dalla coda
+# If the process is running, check for messages from the queue
 if st.session_state['process_running'] and 'message_queue' in st.session_state:
-    # Controlla se ci sono messaggi nella coda
+    # Check if there are messages in the queue
     message_processed = False
     log_messages = []
     
@@ -446,21 +456,21 @@ if st.session_state['process_running'] and 'message_queue' in st.session_state:
             
             if message_type == "log":
                 log_messages.append(message_data)
-                # Aggiorna lo stato con l'ultimo messaggio di log significativo
+                # Update status with the last significant log message
                 if "Extracting audio" in message_data:
-                    st.session_state['status_message'] = "Estrazione audio dal video..."
+                    st.session_state['status_message'] = "Extracting audio from video..."
                 elif "Transcribing audio" in message_data:
-                    st.session_state['status_message'] = "Trascrizione audio in corso..."
+                    st.session_state['status_message'] = "Transcribing audio..."
                 elif "Translating transcript" in message_data:
-                    st.session_state['status_message'] = "Traduzione del testo in corso..."
+                    st.session_state['status_message'] = "Translating text..."
                 elif "Generating audio segments" in message_data or "Generating audio with cloned voice" in message_data:
-                    st.session_state['status_message'] = "Generazione segmenti audio tradotti..."
+                    st.session_state['status_message'] = "Generating translated audio segments..."
                 elif "Combining audio segments" in message_data:
-                    st.session_state['status_message'] = "Combinazione segmenti audio..."
+                    st.session_state['status_message'] = "Combining audio segments..."
                 elif "Creating final video" in message_data:
-                    st.session_state['status_message'] = "Creazione video finale..."
+                    st.session_state['status_message'] = "Creating final video..."
                 elif "Process interrupted by user" in message_data:
-                    st.session_state['status_message'] = "Interruzione in corso..."
+                    st.session_state['status_message'] = "Interrupting..."
             elif message_type == "status":
                 message, progress = message_data
                 st.session_state['status_message'] = message
@@ -475,50 +485,50 @@ if st.session_state['process_running'] and 'message_queue' in st.session_state:
         except queue.Empty:
             break
     
-    # Aggiorna l'interfaccia se sono stati elaborati messaggi
+    # Update the interface if messages were processed
     if message_processed:
-        # Aggiorna la barra di progresso e il testo di stato
+        # Update the progress bar and status text
         progress_bar.progress(st.session_state['progress_value'])
-        status_text.markdown(f"**Stato:** {st.session_state['status_message']}")
+        status_text.markdown(f"**Status:** {st.session_state['status_message']}")
     
-    # Controlla se il processo è completato o interrotto
+    # Check if the process is completed or interrupted
     if not st.session_state['process_running']:
         if st.session_state['process_interrupted']:
-            st.warning("Il processo è stato interrotto dall'utente. Il video tradotto potrebbe non essere disponibile o essere incompleto.")
+            st.warning("The process was interrupted by the user. The translated video may not be available or may be incomplete.")
         elif st.session_state['process_completed']:
-            # Mostra il video tradotto
+            # Show the translated video
             if st.session_state['output_video_path'] and os.path.exists(st.session_state['output_video_path']):
                 output_video_area.video(st.session_state['output_video_path'])
                 
-                # Pulsante per scaricare il video tradotto
+                # Button to download the translated video
                 with open(st.session_state['output_video_path'], "rb") as file:
                     download_button_area.download_button(
-                        label="Scarica video tradotto",
+                        label="Download Translated Video",
                         data=file,
                         file_name=os.path.basename(st.session_state['output_video_path']),
                         mime="video/mp4"
                     )
         
-        # Pulisci i file temporanei
+        # Clean up temporary files
         if not keep_temp and 'video_path' in st.session_state and os.path.exists(st.session_state['video_path']):
             try:
                 os.unlink(st.session_state['video_path'])
             except Exception as e:
-                st.warning(f"Impossibile eliminare il file temporaneo: {st.session_state['video_path']}. Verrà rimosso automaticamente in seguito.")
+                st.warning(f"Unable to delete temporary file: {st.session_state['video_path']}. It will be automatically removed later.")
                 
         if not keep_temp and 'voice_samples_dir' in st.session_state and st.session_state['voice_samples_dir'] and os.path.exists(st.session_state['voice_samples_dir']):
             try:
                 import shutil
                 shutil.rmtree(st.session_state['voice_samples_dir'])
             except Exception as e:
-                st.warning(f"Impossibile eliminare la directory temporanea: {st.session_state['voice_samples_dir']}. Verrà rimossa automaticamente in seguito.")
+                st.warning(f"Unable to delete temporary directory: {st.session_state['voice_samples_dir']}. It will be automatically removed later.")
     
-    # Ricarica la pagina periodicamente per aggiornare lo stato
+    # Reload the page periodically to update the status
     if st.session_state['process_running']:
-        time.sleep(0.1)  # Ridotto il tempo di attesa per aggiornamenti più frequenti
+        time.sleep(0.1)  # Reduced wait time for more frequent updates
         st.rerun()
 
-# Pulisci il file di stop quando l'app viene chiusa
+# Clean up the stop file when the app is closed
 def cleanup():
     if 'stop_file_path' in st.session_state and os.path.exists(st.session_state['stop_file_path']):
         try:
@@ -526,10 +536,10 @@ def cleanup():
         except:
             pass
 
-# Registra la funzione di pulizia
+# Register the cleanup function
 import atexit
 atexit.register(cleanup)
 
 if __name__ == "__main__":
-    # Questo codice viene eseguito quando si avvia l'applicazione con streamlit run app.py
+    # This code is executed when the application is started with streamlit run app.py
     pass 

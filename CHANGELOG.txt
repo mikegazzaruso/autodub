@@ -11,6 +11,8 @@ New features:
 - Created macOS-specific setup script for easy installation
 - Enhanced CUDA detection and support for Windows and Linux with NVIDIA GPUs
 - Added platform-specific setup scripts for Windows and Linux
+- Implemented complete English user interface for improved accessibility
+- Added option to select default voice gender (male/female) when not using voice cloning
 
 Technical improvements:
 - Added compatibility patches for Tortoise-TTS on MPS
@@ -20,6 +22,8 @@ Technical improvements:
 - Improved CUDA detection logic to properly identify and utilize NVIDIA GPUs on Windows and Linux
 - Added CUDA fix scripts to ensure proper installation of CUDA-enabled PyTorch
 - Implemented robust hardware detection for optimal performance across all platforms
+- Fixed voice consistency issue to ensure the same voice is used across all segments when not using voice cloning
+- Implemented consistent default voice seeds (42 for male, 24 for female) for predictable voice generation
 
 0.5.2 (March 4, 2025)
 

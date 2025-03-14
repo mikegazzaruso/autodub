@@ -39,6 +39,8 @@ This project is a video translation pipeline that extracts speech from a video, 
 - **Live Progress Updates**: Detailed text display of process phases in real-time
 - **Enhanced Error Handling**: Robust handling of file permissions and language codes
 - **Broad format support**: Works with various video formats including iPhone videos (MOV), MP4, and others
+- **English User Interface**: Complete English UI for improved accessibility and user experience
+- **Consistent Default Voice**: Option to select male or female default voice when not using voice cloning
 - **Hardware Acceleration**:
   - Apple Silicon (MPS) acceleration on M1/M2/M3 Macs
   - CUDA acceleration on Windows and Linux with NVIDIA GPUs
@@ -173,9 +175,10 @@ The main panel allows you to:
 
 1. **Upload a video file**: Select the video you want to translate.
 2. **Upload voice samples**: Provide audio samples for voice cloning.
-3. **Start the translation process**: Begin the translation with the configured settings.
-4. **Monitor progress**: View real-time updates of the translation process.
-5. **Download the result**: Get the translated video when processing is complete.
+3. **Select default voice**: Choose between male or female default voice when no voice samples are provided.
+4. **Start the translation process**: Begin the translation with the configured settings.
+5. **Monitor progress**: View real-time updates of the translation process.
+6. **Download the result**: Get the translated video when processing is complete.
 
 ---
 
@@ -234,6 +237,7 @@ You can also use our Jupyter notebook for easy integration with Google Colab:
 - `--min-pause-duration` : Minimum pause duration in milliseconds
 - `--no-adaptive-timing` : Disable adaptive timing based on language
 - `--no-preserve-breaks` : Do not preserve sentence breaks
+- `--use-female-voice` : Use a female voice as default when no voice samples are provided
 
 ---
 

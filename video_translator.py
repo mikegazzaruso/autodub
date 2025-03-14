@@ -24,7 +24,7 @@ warnings.filterwarnings('ignore')
 class VideoTranslator:
     def __init__(self, source_lang="it", target_lang="en", voice_samples_dir=None, 
                  input_video_path=None, use_cache=True, sync_options=None, keep_temp=False,
-                 stop_callback=None):
+                 stop_callback=None, use_female_voice=False):
         """
         Initializes the video translator.
         
@@ -37,6 +37,7 @@ class VideoTranslator:
             sync_options: Dictionary with synchronization options (optional)
             keep_temp: Whether to keep temporary files after processing (default: False)
             stop_callback: Function to call to check if the process should be stopped (optional)
+            use_female_voice: Whether to use a female voice when no voice samples are provided (default: False)
         """
         self.source_lang = source_lang
         self.target_lang = target_lang
@@ -44,6 +45,7 @@ class VideoTranslator:
         self.use_cache = use_cache
         self.keep_temp = keep_temp
         self.stop_callback = stop_callback
+        self.use_female_voice = use_female_voice
         
         # Create working directory
         self.temp_dir = create_work_directory(input_video_path)
@@ -319,7 +321,8 @@ class VideoTranslator:
                 self.voice_samples,
                 self.conditioning_latents,
                 sync_options=self.sync_options,
-                use_cache=self.use_cache
+                use_cache=self.use_cache,
+                use_female_voice=self.use_female_voice
             )
             
             # Check if process should be stopped
